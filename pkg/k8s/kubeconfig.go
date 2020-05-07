@@ -35,12 +35,12 @@ type UserWithName struct {
 }
 
 type User struct {
-	ClientCertificateData string `yaml:"client-certificate-data",omitempty`
-	ClientKeyData         string `yaml:"client-key-data",omitempty`
-	Username              string `yaml:"username",omitempty`
-	Password              string `yaml:"password",omitempty`
-	Exec                  *Exec  `yaml:"exec",omitempty`
-	Token                 string `json:"token",omitempty`
+	ClientCertificateData string `yaml:"client-certificate-data,omitempty"`
+	ClientKeyData         string `yaml:"client-key-data,omitempty"`
+	Username              string `yaml:"username,omitempty"`
+	Password              string `yaml:"password,omitempty"`
+	Exec                  *Exec  `yaml:"exec,omitempty"`
+	Token                 string `yaml:"token,omitempty"`
 }
 
 // Exec ...
@@ -62,7 +62,7 @@ type KubeConfig struct {
 	APIVersion     string                 `yaml:"apiVersion"`
 	Clusters       []*ClusterWithName     `yaml:"clusters"`
 	Contexts       []*ContextWithName     `yaml:"contexts"`
-	CurrentContext string                 `yaml:"current-context",omitempty`
+	CurrentContext string                 `yaml:"current-context,omitempty"`
 	Kind           string                 `yaml:"kind"`
 	Preferences    map[string]interface{} `yaml:"preferences"`
 	Users          []*UserWithName        `yaml:"users"`
