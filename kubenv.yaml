@@ -1,0 +1,25 @@
+---
+kubeConfig: "/home/test/.kube/config" # Optional, default to $HOME/.kube/config
+
+authProviders:
+  aws-google-auth: {}
+    #IDP: "Bzbj37S"
+    #SP: "91010906235"
+
+authAccounts: {}
+  #staging:
+  #  AuthProvider: aws-google-auth
+  #  AWSProfile: staging
+  #  AWSRole: arn:aws:iam::121638826155:role/AdminStagingWithSAML
+  #  Region: eu-central-1
+  #interf:
+  #  AuthProvider: aws-google-auth
+  #  AWSProfile: interf
+  #  AWSRole: arn:aws:iam::125262463473:role/AdminInterfWithSAML
+  #  Region: eu-central-1
+
+k8sConfigs: {}
+  #dev-aws-de-fra-1:
+  #  authAccount: dev
+  #dev-aws-fr-par-1:
+  #  authAccount: dev
