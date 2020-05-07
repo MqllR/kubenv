@@ -25,7 +25,7 @@ type ContextWithName struct {
 
 type Context struct {
 	Cluster string `yaml:"cluster"`
-	user    string `yaml:"user"`
+	User    string `yaml:"user"`
 }
 
 // User ...
