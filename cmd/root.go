@@ -7,6 +7,8 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"k8s.io/klog"
+
+	"github.com/mqllr/kubenv/cmd/k8s"
 )
 
 var (
@@ -40,15 +42,15 @@ func init() {
 	// root cmd
 	rootCmd.AddCommand(authCmd)
 	rootCmd.AddCommand(k8sCmd)
-	rootCmd.AddCommand(dependencyCmd)
+	rootCmd.AddCommand(depCmd)
 
 	// k8s sub cmd
-	k8sCmd.AddCommand(syncCmd)
-	k8sCmd.AddCommand(useContextCmd)
+	k8sCmd.AddCommand(k8s.SyncCmd)
+	k8sCmd.AddCommand(k8s.UseContextCmd)
 
 	// dependency sub cmd
-	dependencyCmd.AddCommand(depCheckCmd)
-	dependencyCmd.AddCommand(depInstallCmd)
+	depCmd.AddCommand(depCheckCmd)
+	depCmd.AddCommand(depInstallCmd)
 }
 
 func initConfig() {

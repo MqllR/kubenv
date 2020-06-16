@@ -17,8 +17,8 @@ var AvailableTools = []string{
 	"aws-iam-authenticator",
 }
 
-var dependencyCmd = &cobra.Command{
-	Use:   "dependency",
+var depCmd = &cobra.Command{
+	Use:   "dep",
 	Short: "External tools dependency",
 }
 

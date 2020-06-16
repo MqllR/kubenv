@@ -11,6 +11,7 @@ import (
 
 	"github.com/mqllr/kubenv/pkg/aws"
 	awsgoogleauth "github.com/mqllr/kubenv/pkg/aws-google-auth"
+	"github.com/mqllr/kubenv/pkg/helper"
 	"github.com/mqllr/kubenv/pkg/utils"
 )
 
@@ -21,7 +22,7 @@ var authCmd = &cobra.Command{
 	Short: "Authentication related tasks",
 	Args:  cobra.MaximumNArgs(1),
 	PreRun: func(cmd *cobra.Command, args []string) {
-		isConfigExist(
+		helper.IsConfigExist(
 			[]string{
 				"authProviders",
 				"authAccounts",
