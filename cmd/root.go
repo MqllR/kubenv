@@ -8,6 +8,7 @@ import (
 	"github.com/spf13/viper"
 	"k8s.io/klog"
 
+	"github.com/mqllr/kubenv/cmd/dep"
 	"github.com/mqllr/kubenv/cmd/k8s"
 )
 
@@ -49,8 +50,8 @@ func init() {
 	k8sCmd.AddCommand(k8s.UseContextCmd)
 
 	// dependency sub cmd
-	depCmd.AddCommand(depCheckCmd)
-	depCmd.AddCommand(depInstallCmd)
+	depCmd.AddCommand(dep.CheckCmd)
+	depCmd.AddCommand(dep.InstallCmd)
 }
 
 func initConfig() {
