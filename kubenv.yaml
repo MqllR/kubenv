@@ -10,12 +10,12 @@ authAccounts: {}
   #staging:
   #  AuthProvider: aws-google-auth
   #  AWSProfile: staging
-  #  AWSRole: arn:aws:iam::121638826155:role/AdminStagingWithSAML
+  #  AWSRole: arn:aws:iam::121638826155:role/AdminStaging
   #  Region: eu-central-1
-  #interf:
+  #dev:
   #  AuthProvider: aws-google-auth
-  #  AWSProfile: interf
-  #  AWSRole: arn:aws:iam::125262463473:role/AdminInterfWithSAML
+  #  AWSProfile: dev
+  #  AWSRole: arn:aws:iam::125262463473:role/AdminDev
   #  Region: eu-central-1
 
 k8sConfigs: {}

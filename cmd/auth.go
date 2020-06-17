@@ -11,6 +11,7 @@ import (
 
 	"github.com/mqllr/kubenv/pkg/aws"
 	awsgoogleauth "github.com/mqllr/kubenv/pkg/aws-google-auth"
+	"github.com/mqllr/kubenv/pkg/config"
 	"github.com/mqllr/kubenv/pkg/helper"
 	"github.com/mqllr/kubenv/pkg/utils"
 )
@@ -39,45 +40,41 @@ func init() {
 }
 
 func auth(args []string) {
-	accounts := viper.GetStringMap("authaccounts")
+	authAccountsConfig, err := config.NewAuthAccountsConfig()
+	if err != nil {
+		klog.Fatalf("%s", err)
+	}
 
 	switch {
 	case len(args) == 1 && args[0] == "all":
-		for account, _ := range accounts {
-			authAccount(account)
+		for env, account := range authAccountsConfig.Env {
+			authAccount(env, account)
 		}
 	case len(args) == 1 && args[0] != "all":
-		authAccount(args[0])
+		authAccount(args[0], authAccountsConfig.Env[args[0]])
 	default:
 		var items []string
-		for account, _ := range accounts {
-			items = append(items, account)
+		for env, _ := range authAccountsConfig.Env {
+			items = append(items, env)
 		}
 		item, err := utils.Prompt("Select an account", items)
 		if err != nil {
 			klog.Fatalf("%s", err)
 		}
 
-		authAccount(item)
+		authAccount(item, authAccountsConfig.Env[item])
 	}
 }
 
-func authAccount(account string) {
-	sub := getViperAccount(account)
-	authprovider := sub.GetString("authprovider")
-
-	if authprovider == "" {
-		klog.Errorf("AuthProvider for account %s is not defined", account)
-	}
-
-	provider := getViperProvider(authprovider)
-	if authprovider == "aws-google-auth" {
-		fmt.Printf("%v Authentication using aws-google-auth on %s...\n", promptui.IconSelect, account)
-		authWithGoogleAuth(provider, sub)
+func authAccount(env string, account *config.AuthAccount) {
+	fmt.Printf("%v Authentication using %s on %s...\n", promptui.IconSelect, account.AuthProvider, env)
+	provider := getViperProvider(account.AuthProvider)
+	if account.AuthProvider == "aws-google-auth" {
+		authWithGoogleAuth(provider, account)
 	}
 }
 
-func authWithGoogleAuth(authCfg *viper.Viper, accountCfg *viper.Viper) {
+func authWithGoogleAuth(authCfg *viper.Viper, account *config.AuthAccount) {
 	idp := authCfg.GetString("IDP")
 	sp := authCfg.GetString("SP")
 
@@ -94,9 +91,9 @@ func authWithGoogleAuth(authCfg *viper.Viper, accountCfg *viper.Viper) {
 		klog.V(2).Infof("Authenticate using aws-google-auth UserName: %s", userName)
 	}
 
-	auth.AWSRole = accountCfg.GetString("AWSRole")
-	auth.AWSProfile = accountCfg.GetString("AWSProfile")
-	auth.Region = accountCfg.GetString("Region")
+	auth.AWSRole = account.AWSRole
+	auth.AWSProfile = account.AWSProfile
+	auth.Region = account.Region
 
 	klog.V(2).Infof("Authenticate using aws-google-auth AWSRole: %s", auth.AWSRole)
 	klog.V(2).Infof("Authenticate using aws-google-auth AWSProfile: %s", auth.AWSProfile)
@@ -124,14 +121,6 @@ func authWithGoogleAuth(authCfg *viper.Viper, accountCfg *viper.Viper) {
 	if err != nil {
 		klog.Fatalf("Error on authentication: %s", err)
 	}
-}
-
-func getViperAccount(account string) *viper.Viper {
-	if !viper.IsSet("authaccounts." + account) {
-		klog.Fatalf("Account %s doesn't exist", account)
-	}
-
-	return viper.Sub("authaccounts." + account)
 }
 
 func getViperProvider(provider string) *viper.Viper {
