@@ -16,12 +16,14 @@ import (
 	"github.com/mqllr/kubenv/pkg/utils"
 )
 
-var userName string
+var (
+	account string
+	all     bool
+)
 
 var authCmd = &cobra.Command{
-	Use:   "auth [account]",
+	Use:   "auth",
 	Short: "Authentication related tasks",
-	Args:  cobra.MaximumNArgs(1),
 	PreRun: func(cmd *cobra.Command, args []string) {
 		helper.IsConfigExist(
 			[]string{
@@ -31,30 +33,31 @@ var authCmd = &cobra.Command{
 		)
 	},
 	Run: func(cmd *cobra.Command, args []string) {
-		auth(args)
+		auth()
 	},
 }
 
 func init() {
-	authCmd.Flags().StringVarP(&userName, "username", "u", "", "The username to authenticate")
+	authCmd.Flags().StringVarP(&account, "account", "a", "", "Account name to authenticate")
+	authCmd.Flags().BoolVarP(&all, "all", "", false, "Authenticate all account")
 }
 
-func auth(args []string) {
+func auth() {
 	authAccountsConfig, err := config.NewAuthAccountsConfig()
 	if err != nil {
 		klog.Fatalf("%s", err)
 	}
 
 	switch {
-	case len(args) == 1 && args[0] == "all":
+	case all:
 		for env, account := range authAccountsConfig.Env {
 			authAccount(env, account)
 		}
-	case len(args) == 1 && args[0] != "all":
-		authAccount(args[0], authAccountsConfig.Env[args[0]])
+	case account != "":
+		authAccount(account, authAccountsConfig.Env[account])
 	default:
 		var items []string
-		for env, _ := range authAccountsConfig.Env {
+		for env := range authAccountsConfig.Env {
 			items = append(items, env)
 		}
 		item, err := utils.Prompt("Select an account", items)
@@ -85,11 +88,6 @@ func authWithGoogleAuth(authCfg *viper.Viper, account *config.AuthAccount) {
 		idp,
 		sp,
 	)
-
-	if userName != "" {
-		auth.UserName = userName
-		klog.V(2).Infof("Authenticate using aws-google-auth UserName: %s", userName)
-	}
 
 	auth.AWSRole = account.AWSRole
 	auth.AWSProfile = account.AWSProfile
