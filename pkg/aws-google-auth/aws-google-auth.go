@@ -25,7 +25,7 @@ type Interface interface {
 
 const (
 	AWSGoogleAuthCmd = "aws-google-auth"
-	pipCmd           = "pip"
+	pipCmd           = "sudo pip"
 	DefaultDuration  = 28800
 )
 

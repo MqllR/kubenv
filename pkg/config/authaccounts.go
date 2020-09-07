@@ -11,14 +11,16 @@ type AuthAccount struct {
 	AWSProfile   string `yaml:"AWSProfile,omitempty"`
 	AWSRole      string `yaml:"AWSRole,omitempty"`
 	Region       string `yaml:"Region,omitempty"`
+	UserName     string `yaml:"UserName,omitempty"`
 }
 
 type AuthAccounts struct {
-	Env map[string]*AuthAccount `mapstructure:"authAccounts"`
+	Envs map[string]*AuthAccount `mapstructure:"authAccounts"`
 }
 
 var AuthProviders = []string{
 	"aws-google-auth",
+	"aws-azure-login",
 }
 
 func NewAuthAccountsConfig() (*AuthAccounts, error) {
@@ -37,7 +39,7 @@ func NewAuthAccountsConfig() (*AuthAccounts, error) {
 }
 
 func (a *AuthAccounts) Validate() error {
-	for env, auth := range a.Env {
+	for env, auth := range a.Envs {
 		if auth.AuthProvider == "" {
 			return fmt.Errorf("Nil AuthProvider for environment %s", env)
 		}
@@ -47,7 +49,9 @@ func (a *AuthAccounts) Validate() error {
 				return nil
 			}
 		}
+
 		return fmt.Errorf("The AuthProvider %s doesn't exist", auth.AuthProvider)
 	}
+
 	return nil
 }
