@@ -79,21 +79,20 @@ func (auth *AWSAzureLogin) Configure() error {
 		return fmt.Errorf("Error aws-azure-login profile is invalid")
 	}
 
-	config, err := aws.NewConfigFile()
+	ini, err := aws.NewConfigFile()
 	if err != nil {
 		return err
 	}
 
-	iniSection := map[string]string{
+	err = ini.EnsureSectionAndSave("profile "+auth.AWSProfile, map[string]string{
 		"azure_tenant_id":              auth.TenantID,
 		"azure_app_id_uri":             auth.AppIDUri,
 		"azure_default_username":       auth.UserName,
 		"azure_default_role_arn":       auth.AWSRole,
 		"azure_default_duration_hours": strconv.Itoa(auth.Duration),
 		"azure_default_remember_me":    strconv.FormatBool(auth.RemeberMe),
-	}
+	})
 
-	err = config.EnsureIniSection("profile "+auth.AWSProfile, iniSection)
 	if err != nil {
 		return err
 	}

@@ -6,8 +6,7 @@ import (
 )
 
 type SharedSession struct {
-	AwsProfile string
-	Sess       *session.Session
+	svc *sts.STS
 }
 
 func NewSharedSession(awsProfile string) (*SharedSession, error) {
@@ -20,15 +19,13 @@ func NewSharedSession(awsProfile string) (*SharedSession, error) {
 	}
 
 	return &SharedSession{
-		AwsProfile: awsProfile,
-		Sess:       sess,
+		svc: sts.New(sess),
 	}, nil
 }
 
-func (sess *SharedSession) IsExpired() bool {
-	svc := sts.New(sess.Sess)
+func (s *SharedSession) IsExpired() bool {
 	input := &sts.GetCallerIdentityInput{}
-	_, err := svc.GetCallerIdentity(input)
+	_, err := s.svc.GetCallerIdentity(input)
 
 	if err != nil {
 		return true
