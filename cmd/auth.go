@@ -5,7 +5,6 @@ import (
 
 	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 	"k8s.io/klog"
 	executil "k8s.io/utils/exec"
 
@@ -51,55 +50,54 @@ func auth() {
 
 	switch {
 	case all:
-		for env, account := range authAccountsConfig.Envs {
-			authAccount(env, account)
+		for _, env := range authAccountsConfig.ListAuthAccountNames() {
+			authAccount(authAccountsConfig.FindAuthAccount(env))
 		}
 		break
 	case account != "":
-		authAccount(account, authAccountsConfig.Envs[account])
+		authAccount(authAccountsConfig.FindAuthAccount(account))
 		break
 	default:
-		var items []string
-		for env := range authAccountsConfig.Envs {
-			items = append(items, env)
-		}
-		item, err := utils.Prompt("Select an account", items)
+		fmt.Println(authAccountsConfig.ListAuthAccountNames())
+		item, err := utils.Prompt("Select an account", authAccountsConfig.ListAuthAccountNames())
 		if err != nil {
 			klog.Fatalf("%s", err)
 		}
 
-		authAccount(item, authAccountsConfig.Envs[item])
+		authAccount(authAccountsConfig.FindAuthAccount(item))
 	}
 }
 
-func authAccount(env string, account *config.AuthAccount) {
-	fmt.Printf("%v Authentication using %s on %s...\n", promptui.IconSelect, account.AuthProvider, env)
-	provider := getViperProvider(account.AuthProvider)
-	if account.AuthProvider == "aws-google-auth" {
-		authWithGoogleAuth(provider, account)
-	} else if account.AuthProvider == "aws-azure-login" {
-		authWithAzureLogin(provider, account)
+func authAccount(account *config.AuthAccount) {
+	fmt.Printf("%v Authentication using %s...\n", promptui.IconSelect, account.AuthProvider)
+	provider, err := config.NewAuthProvidersConfig()
+	if err != nil {
+		klog.Fatalf("Syntax error for AuthProviders: %s", err)
+	}
+
+	switch account.AuthProvider {
+	case "aws-google-auth":
+		authWithGoogleAuth(provider.FindAuthProvider("aws-google-auth"), account)
+	case "aws-azure-login":
+		authWithAzureLogin(provider.FindAuthProvider("aws-azure-login"), account)
+	case "aws-sts":
+		authWithAWSSTS(provider.FindAuthProvider("aws-sts"), account)
 	}
 }
 
-func getViperProvider(provider string) *viper.Viper {
-	if !viper.IsSet("authproviders." + provider) {
-		klog.Fatalf("Provider %s doesn't exist", provider)
-	}
-
-	return viper.Sub("authproviders." + provider)
-}
-
-func authWithGoogleAuth(authCfg *viper.Viper, account *config.AuthAccount) {
-	idp := authCfg.GetString("IDP")
-	sp := authCfg.GetString("SP")
+func authWithGoogleAuth(provider *config.AuthProvider, account *config.AuthAccount) {
+	idp := provider.IDP
+	sp := provider.SP
+	username := provider.UserName
 
 	klog.V(2).Infof("Authenticate using aws-google-auth IDP: %s", idp)
 	klog.V(2).Infof("Authenticate using aws-google-auth SP: %s", sp)
+	klog.V(2).Infof("Authenticate using aws-google-auth UserName: %s", username)
 
 	auth := awsgoogleauth.NewAWSGoogleAuth(
 		idp,
 		sp,
+		username,
 	)
 
 	auth.AWSRole = account.AWSRole
@@ -134,10 +132,10 @@ func authWithGoogleAuth(authCfg *viper.Viper, account *config.AuthAccount) {
 	}
 }
 
-func authWithAzureLogin(authCfg *viper.Viper, account *config.AuthAccount) {
-	tid := authCfg.GetString("TenantID")
-	appid := authCfg.GetString("AppIDUri")
-	username := authCfg.GetString("UserName")
+func authWithAzureLogin(provider *config.AuthProvider, account *config.AuthAccount) {
+	tid := provider.TenantID
+	appid := provider.AppIDUri
+	username := provider.UserName
 
 	klog.V(2).Infof("Authenticate using aws-azure-login TenantID: %s", tid)
 	klog.V(2).Infof("Authenticate using aws-azure-login AppIDUri: %s", appid)
@@ -179,4 +177,7 @@ func authWithAzureLogin(authCfg *viper.Viper, account *config.AuthAccount) {
 	}
 
 	runner.Authenticate(auth)
+}
+
+func authWithAWSSTS(provider *config.AuthProvider, account *config.AuthAccount) {
 }
