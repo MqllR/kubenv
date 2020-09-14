@@ -1,23 +1,25 @@
-package aws
+package awssts
 
 import (
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/service/sts"
+
+	"github.com/mqllr/kubenv/pkg/aws"
 )
 
 type AssumeRole struct {
 	duration        *int64
 	roleArn         *string
 	roleSessionName *string
-	session         *SharedSession
+	session         *aws.SharedSession
 	profile         string
 	region          string
 }
 
 func NewAssumeRole(duration int64, roleArn string,
-	roleSessionName string, session *SharedSession,
-	profile string, region string) (*AssumeRole, error) {
+	roleSessionName string, session *aws.SharedSession,
+	profile string, region string) *AssumeRole {
 	return &AssumeRole{
 		duration:        &duration,
 		roleArn:         &roleArn,
@@ -25,10 +27,10 @@ func NewAssumeRole(duration int64, roleArn string,
 		session:         session,
 		profile:         profile,
 		region:          region,
-	}, nil
+	}
 }
 
-func (a *AssumeRole) AssumeRoleAndSaveProfile() error {
+func (a *AssumeRole) Authenticate() error {
 	input := &sts.AssumeRoleInput{
 		DurationSeconds: a.duration,
 		RoleArn:         a.roleArn,
@@ -40,12 +42,12 @@ func (a *AssumeRole) AssumeRoleAndSaveProfile() error {
 		return fmt.Errorf("RoleInput not valid: %s", err)
 	}
 
-	output, err := a.session.svc.AssumeRole(input)
+	output, err := a.session.Svc.AssumeRole(input)
 	if err != nil {
 		return fmt.Errorf("Error on AssumeRoleInput: %s", err)
 	}
 
-	ini, err := NewConfigFile()
+	ini, err := aws.NewConfigFile()
 	if err != nil {
 		return fmt.Errorf("Error on AWS config file: %s", err)
 	}
@@ -59,7 +61,7 @@ func (a *AssumeRole) AssumeRoleAndSaveProfile() error {
 		return err
 	}
 
-	ini, err = NewCredFile()
+	ini, err = aws.NewCredFile()
 	if err != nil {
 		return fmt.Errorf("Error on AWS credentials file: %s", err)
 	}

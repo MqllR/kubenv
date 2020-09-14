@@ -33,6 +33,7 @@ func NewAuthAccountsConfig() (*AuthAccounts, error) {
 	return &auth, nil
 }
 
+// TODO we should test if the provider is declared
 func (a *AuthAccounts) Validate() error {
 	for env, auth := range a.Envs {
 		if auth.AuthProvider == "" {
@@ -45,7 +46,7 @@ func (a *AuthAccounts) Validate() error {
 			}
 		}
 
-		return fmt.Errorf("The AuthProvider %s doesn't exist", auth.AuthProvider)
+		return fmt.Errorf("AuthProvider %s not implemented", auth.AuthProvider)
 	}
 
 	return nil

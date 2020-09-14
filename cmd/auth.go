@@ -11,14 +11,17 @@ import (
 	"github.com/mqllr/kubenv/pkg/aws"
 	awsazurelogin "github.com/mqllr/kubenv/pkg/aws-azure-login"
 	awsgoogleauth "github.com/mqllr/kubenv/pkg/aws-google-auth"
+	awssts "github.com/mqllr/kubenv/pkg/aws-sts"
 	"github.com/mqllr/kubenv/pkg/config"
 	"github.com/mqllr/kubenv/pkg/helper"
 	"github.com/mqllr/kubenv/pkg/utils"
 )
 
 var (
-	account string
-	all     bool
+	account             string
+	all                 bool
+	authAccountsConfig  *config.AuthAccounts
+	authProvidersConfig *config.AuthProviders
 )
 
 var authCmd = &cobra.Command{
@@ -43,9 +46,15 @@ func init() {
 }
 
 func auth() {
-	authAccountsConfig, err := config.NewAuthAccountsConfig()
+	var err error
+	authAccountsConfig, err = config.NewAuthAccountsConfig()
 	if err != nil {
-		klog.Fatalf("%s", err)
+		klog.Fatalf("Syntax error for authAccounts: %s", err)
+	}
+
+	authProvidersConfig, err = config.NewAuthProvidersConfig()
+	if err != nil {
+		klog.Fatalf("Syntax error for AuthProviders: %s", err)
 	}
 
 	switch {
@@ -70,18 +79,14 @@ func auth() {
 
 func authAccount(account *config.AuthAccount) {
 	fmt.Printf("%v Authentication using %s...\n", promptui.IconSelect, account.AuthProvider)
-	provider, err := config.NewAuthProvidersConfig()
-	if err != nil {
-		klog.Fatalf("Syntax error for AuthProviders: %s", err)
-	}
 
 	switch account.AuthProvider {
 	case "aws-google-auth":
-		authWithGoogleAuth(provider.FindAuthProvider("aws-google-auth"), account)
+		authWithGoogleAuth(authProvidersConfig.FindAuthProvider("aws-google-auth"), account)
 	case "aws-azure-login":
-		authWithAzureLogin(provider.FindAuthProvider("aws-azure-login"), account)
+		authWithAzureLogin(authProvidersConfig.FindAuthProvider("aws-azure-login"), account)
 	case "aws-sts":
-		authWithAWSSTS(provider.FindAuthProvider("aws-sts"), account)
+		authWithAWSSTS(authProvidersConfig.FindAuthProvider("aws-sts"), account)
 	}
 }
 
@@ -179,5 +184,35 @@ func authWithAzureLogin(provider *config.AuthProvider, account *config.AuthAccou
 	runner.Authenticate(auth)
 }
 
+// TODO add outputs
 func authWithAWSSTS(provider *config.AuthProvider, account *config.AuthAccount) {
+	var sess *aws.SharedSession
+	var err error
+	if account.DependsOn != "" {
+		auth := authAccountsConfig.FindAuthAccount(account.DependsOn)
+		authAccount(auth)
+		sess, err = aws.NewSharedSession(auth.AWSProfile)
+		if err != nil {
+			klog.Fatal("Error when creating a new session: %s", err)
+		}
+	} else {
+		sess, err = aws.NewSharedSession("")
+		if err != nil {
+			klog.Fatal("Error when creating a new session: %s", err)
+		}
+	}
+
+	// TODO handle the duration
+	a := awssts.NewAssumeRole(1000,
+		account.AWSRole,
+		provider.UserName,
+		sess,
+		account.AWSProfile,
+		account.Region,
+	)
+
+	err = a.Authenticate()
+	if err != nil {
+		klog.Fatalf("Error when trying the get a STS session: %s", err)
+	}
 }
