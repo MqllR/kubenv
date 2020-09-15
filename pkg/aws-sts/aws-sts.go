@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/service/sts"
+	"k8s.io/klog"
 
 	"github.com/mqllr/kubenv/pkg/aws"
 )
@@ -47,6 +48,8 @@ func (a *AssumeRole) Authenticate() error {
 		return fmt.Errorf("Error on AssumeRoleInput: %s", err)
 	}
 
+	klog.V(5).Info("Token received: %v", output)
+
 	ini, err := aws.NewConfigFile()
 	if err != nil {
 		return fmt.Errorf("Error on AWS config file: %s", err)
@@ -56,6 +59,8 @@ func (a *AssumeRole) Authenticate() error {
 		"output": "json",
 		"region": a.region,
 	})
+
+	klog.V(2).Infof("Profile %s saved in AWS config file", a.profile)
 
 	if err != nil {
 		return err
@@ -75,6 +80,8 @@ func (a *AssumeRole) Authenticate() error {
 	if err != nil {
 		return err
 	}
+
+	klog.V(2).Infof("Credentials %s saved in AWS credentials file", a.profile)
 
 	return nil
 }

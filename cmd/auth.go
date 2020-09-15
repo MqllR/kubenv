@@ -67,7 +67,6 @@ func auth() {
 		authAccount(authAccountsConfig.FindAuthAccount(account))
 		break
 	default:
-		fmt.Println(authAccountsConfig.ListAuthAccountNames())
 		item, err := utils.Prompt("Select an account", authAccountsConfig.ListAuthAccountNames())
 		if err != nil {
 			klog.Fatalf("%s", err)
@@ -79,6 +78,11 @@ func auth() {
 
 func authAccount(account *config.AuthAccount) {
 	fmt.Printf("%v Authentication using %s...\n", promptui.IconSelect, account.AuthProvider)
+
+	if !helper.IsExpired(account) {
+		fmt.Printf("%v Token already active. Skipping.\n", promptui.IconGood)
+		return
+	}
 
 	switch account.AuthProvider {
 	case "aws-google-auth":
@@ -113,25 +117,10 @@ func authWithGoogleAuth(provider *config.AuthProvider, account *config.AuthAccou
 	klog.V(2).Infof("Authenticate using aws-google-auth AWSProfile: %s", auth.AWSProfile)
 	klog.V(2).Infof("Authenticate using aws-google-auth Region: %s", auth.Region)
 
-	session, err := aws.NewSharedSession(auth.AWSProfile)
-	if err != nil {
-		klog.Fatalf("Cannot create an AWS session: %s", err)
-	}
-
-	if !session.IsExpired() {
-		fmt.Printf("%v Your token is still valid. Would you like to renew it? [Y/n] ", promptui.IconInitial)
-		var answer string
-		fmt.Scanln(&answer)
-
-		if answer != "Y" {
-			return
-		}
-	}
-
 	execer := executil.New()
 	runner := awsgoogleauth.New(execer)
 
-	err = runner.Authenticate(auth)
+	err := runner.Authenticate(auth)
 	if err != nil {
 		klog.Fatalf("Error on authentication: %s", err)
 	}
@@ -158,30 +147,20 @@ func authWithAzureLogin(provider *config.AuthProvider, account *config.AuthAccou
 	klog.V(2).Infof("Authenticate using aws-google-auth AWSRole: %s", auth.AWSRole)
 	klog.V(2).Infof("Authenticate using aws-google-auth AWSProfile: %s", auth.AWSProfile)
 
-	session, err := aws.NewSharedSession(auth.AWSProfile)
-	if err != nil {
-		klog.Fatalf("Cannot create an AWS session: %s", err)
-	}
-
-	if !session.IsExpired() {
-		fmt.Printf("%v Your token is still valid. Would you like to renew it? [Y/n] ", promptui.IconInitial)
-		var answer string
-		fmt.Scanln(&answer)
-
-		if answer != "Y" {
-			return
-		}
-	}
-
 	execer := executil.New()
 	runner := awsazurelogin.New(execer)
 
-	err = auth.Configure()
+	err := auth.Configure()
 	if err != nil {
 		klog.Fatalf("Error when configuring the AWS profile: %s", err)
 	}
 
-	runner.Authenticate(auth)
+	klog.V(2).Info("Profile configured for aws-azure-login tool")
+
+	err = runner.Authenticate(auth)
+	if err != nil {
+		klog.Fatalf("Error on authentication: %s", err)
+	}
 }
 
 // TODO add outputs
@@ -190,15 +169,18 @@ func authWithAWSSTS(provider *config.AuthProvider, account *config.AuthAccount) 
 	var err error
 	if account.DependsOn != "" {
 		auth := authAccountsConfig.FindAuthAccount(account.DependsOn)
+
+		fmt.Printf("%v Depends on %s\n", promptui.IconWarn, account.DependsOn)
+
 		authAccount(auth)
 		sess, err = aws.NewSharedSession(auth.AWSProfile)
 		if err != nil {
-			klog.Fatal("Error when creating a new session: %s", err)
+			klog.Fatalf("Error when creating a new session: %s", err)
 		}
 	} else {
 		sess, err = aws.NewSharedSession("")
 		if err != nil {
-			klog.Fatal("Error when creating a new session: %s", err)
+			klog.Fatalf("Error when creating a new session: %s", err)
 		}
 	}
 
@@ -215,4 +197,6 @@ func authWithAWSSTS(provider *config.AuthProvider, account *config.AuthAccount) 
 	if err != nil {
 		klog.Fatalf("Error when trying the get a STS session: %s", err)
 	}
+
+	fmt.Printf("%v Authenticated on %s\n", promptui.IconGood, account.AuthProvider)
 }
