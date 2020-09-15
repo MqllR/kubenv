@@ -10,6 +10,8 @@ authProviders:
     #TenantID: "Bzbj37S"
     #AppIDUri: "91010906235"
     #UserName: "my@e.mail"
+  aws-sts: {}
+    #UserName: "my@e.mail"
 
 authAccounts: {}
   #staging:
@@ -26,6 +28,11 @@ authAccounts: {}
   #  AuthProvider: aws-azure-login
   #  AWSProfile: test
   #  AWSRole: arn:aws:iam::125262463473:role/AdminTest
+  #doublejump:
+  #  AuthProvider: aws-sts
+  #  AWSProfile: doublejump
+  #  AWSRole: arn:aws:iam::125262463543:role/DoubleJumpTest
+  #  DependsOn: test
 
 k8sConfigs: {}
   #dev-aws-de-fra-1:

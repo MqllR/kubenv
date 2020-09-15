@@ -11,16 +11,11 @@ type AuthAccount struct {
 	AWSProfile   string `yaml:"AWSProfile,omitempty"`
 	AWSRole      string `yaml:"AWSRole,omitempty"`
 	Region       string `yaml:"Region,omitempty"`
-	UserName     string `yaml:"UserName,omitempty"`
+	DependsOn    string `yaml:"DependsOn,omitempty"`
 }
 
 type AuthAccounts struct {
 	Envs map[string]*AuthAccount `mapstructure:"authAccounts"`
-}
-
-var AuthProviders = []string{
-	"aws-google-auth",
-	"aws-azure-login",
 }
 
 func NewAuthAccountsConfig() (*AuthAccounts, error) {
@@ -38,20 +33,38 @@ func NewAuthAccountsConfig() (*AuthAccounts, error) {
 	return &auth, nil
 }
 
+// TODO we should test if the provider is declared
 func (a *AuthAccounts) Validate() error {
 	for env, auth := range a.Envs {
 		if auth.AuthProvider == "" {
 			return fmt.Errorf("Nil AuthProvider for environment %s", env)
 		}
 
-		for _, provider := range AuthProviders {
+		for _, provider := range AvailableAuthProviders {
 			if auth.AuthProvider == provider {
 				return nil
 			}
 		}
 
-		return fmt.Errorf("The AuthProvider %s doesn't exist", auth.AuthProvider)
+		return fmt.Errorf("AuthProvider %s not implemented", auth.AuthProvider)
 	}
 
 	return nil
+}
+
+func (a *AuthAccounts) FindAuthAccount(account string) *AuthAccount {
+	if acc, ok := a.Envs[account]; ok {
+		return acc
+	}
+
+	return &AuthAccount{}
+}
+
+func (a *AuthAccounts) ListAuthAccountNames() []string {
+	var accounts []string
+	for account := range a.Envs {
+		accounts = append(accounts, account)
+	}
+
+	return accounts
 }

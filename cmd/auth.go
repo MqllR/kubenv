@@ -5,21 +5,23 @@ import (
 
 	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 	"k8s.io/klog"
 	executil "k8s.io/utils/exec"
 
 	"github.com/mqllr/kubenv/pkg/aws"
 	awsazurelogin "github.com/mqllr/kubenv/pkg/aws-azure-login"
 	awsgoogleauth "github.com/mqllr/kubenv/pkg/aws-google-auth"
+	awssts "github.com/mqllr/kubenv/pkg/aws-sts"
 	"github.com/mqllr/kubenv/pkg/config"
 	"github.com/mqllr/kubenv/pkg/helper"
 	"github.com/mqllr/kubenv/pkg/utils"
 )
 
 var (
-	account string
-	all     bool
+	account             string
+	all                 bool
+	authAccountsConfig  *config.AuthAccounts
+	authProvidersConfig *config.AuthProviders
 )
 
 var authCmd = &cobra.Command{
@@ -44,62 +46,67 @@ func init() {
 }
 
 func auth() {
-	authAccountsConfig, err := config.NewAuthAccountsConfig()
+	var err error
+	authAccountsConfig, err = config.NewAuthAccountsConfig()
 	if err != nil {
-		klog.Fatalf("%s", err)
+		klog.Fatalf("Syntax error for authAccounts: %s", err)
+	}
+
+	authProvidersConfig, err = config.NewAuthProvidersConfig()
+	if err != nil {
+		klog.Fatalf("Syntax error for AuthProviders: %s", err)
 	}
 
 	switch {
 	case all:
-		for env, account := range authAccountsConfig.Envs {
-			authAccount(env, account)
+		for _, env := range authAccountsConfig.ListAuthAccountNames() {
+			authAccount(authAccountsConfig.FindAuthAccount(env))
 		}
 		break
 	case account != "":
-		authAccount(account, authAccountsConfig.Envs[account])
+		authAccount(authAccountsConfig.FindAuthAccount(account))
 		break
 	default:
-		var items []string
-		for env := range authAccountsConfig.Envs {
-			items = append(items, env)
-		}
-		item, err := utils.Prompt("Select an account", items)
+		item, err := utils.Prompt("Select an account", authAccountsConfig.ListAuthAccountNames())
 		if err != nil {
 			klog.Fatalf("%s", err)
 		}
 
-		authAccount(item, authAccountsConfig.Envs[item])
+		authAccount(authAccountsConfig.FindAuthAccount(item))
 	}
 }
 
-func authAccount(env string, account *config.AuthAccount) {
-	fmt.Printf("%v Authentication using %s on %s...\n", promptui.IconSelect, account.AuthProvider, env)
-	provider := getViperProvider(account.AuthProvider)
-	if account.AuthProvider == "aws-google-auth" {
-		authWithGoogleAuth(provider, account)
-	} else if account.AuthProvider == "aws-azure-login" {
-		authWithAzureLogin(provider, account)
+func authAccount(account *config.AuthAccount) {
+	fmt.Printf("%v Authentication using %s...\n", promptui.IconSelect, account.AuthProvider)
+
+	if !helper.IsExpired(account) {
+		fmt.Printf("%v Token already active. Skipping.\n", promptui.IconGood)
+		return
+	}
+
+	switch account.AuthProvider {
+	case "aws-google-auth":
+		authWithGoogleAuth(authProvidersConfig.FindAuthProvider("aws-google-auth"), account)
+	case "aws-azure-login":
+		authWithAzureLogin(authProvidersConfig.FindAuthProvider("aws-azure-login"), account)
+	case "aws-sts":
+		authWithAWSSTS(authProvidersConfig.FindAuthProvider("aws-sts"), account)
 	}
 }
 
-func getViperProvider(provider string) *viper.Viper {
-	if !viper.IsSet("authproviders." + provider) {
-		klog.Fatalf("Provider %s doesn't exist", provider)
-	}
-
-	return viper.Sub("authproviders." + provider)
-}
-
-func authWithGoogleAuth(authCfg *viper.Viper, account *config.AuthAccount) {
-	idp := authCfg.GetString("IDP")
-	sp := authCfg.GetString("SP")
+func authWithGoogleAuth(provider *config.AuthProvider, account *config.AuthAccount) {
+	idp := provider.IDP
+	sp := provider.SP
+	username := provider.UserName
 
 	klog.V(2).Infof("Authenticate using aws-google-auth IDP: %s", idp)
 	klog.V(2).Infof("Authenticate using aws-google-auth SP: %s", sp)
+	klog.V(2).Infof("Authenticate using aws-google-auth UserName: %s", username)
 
 	auth := awsgoogleauth.NewAWSGoogleAuth(
 		idp,
 		sp,
+		username,
 	)
 
 	auth.AWSRole = account.AWSRole
@@ -110,34 +117,19 @@ func authWithGoogleAuth(authCfg *viper.Viper, account *config.AuthAccount) {
 	klog.V(2).Infof("Authenticate using aws-google-auth AWSProfile: %s", auth.AWSProfile)
 	klog.V(2).Infof("Authenticate using aws-google-auth Region: %s", auth.Region)
 
-	session, err := aws.NewSharedSession(auth.AWSProfile)
-	if err != nil {
-		klog.Fatalf("Cannot create an AWS session: %s", err)
-	}
-
-	if !session.IsExpired() {
-		fmt.Printf("%v Your token is still valid. Would you like to renew it? [Y/n] ", promptui.IconInitial)
-		var answer string
-		fmt.Scanln(&answer)
-
-		if answer != "Y" {
-			return
-		}
-	}
-
 	execer := executil.New()
 	runner := awsgoogleauth.New(execer)
 
-	err = runner.Authenticate(auth)
+	err := runner.Authenticate(auth)
 	if err != nil {
 		klog.Fatalf("Error on authentication: %s", err)
 	}
 }
 
-func authWithAzureLogin(authCfg *viper.Viper, account *config.AuthAccount) {
-	tid := authCfg.GetString("TenantID")
-	appid := authCfg.GetString("AppIDUri")
-	username := authCfg.GetString("UserName")
+func authWithAzureLogin(provider *config.AuthProvider, account *config.AuthAccount) {
+	tid := provider.TenantID
+	appid := provider.AppIDUri
+	username := provider.UserName
 
 	klog.V(2).Infof("Authenticate using aws-azure-login TenantID: %s", tid)
 	klog.V(2).Infof("Authenticate using aws-azure-login AppIDUri: %s", appid)
@@ -155,28 +147,56 @@ func authWithAzureLogin(authCfg *viper.Viper, account *config.AuthAccount) {
 	klog.V(2).Infof("Authenticate using aws-google-auth AWSRole: %s", auth.AWSRole)
 	klog.V(2).Infof("Authenticate using aws-google-auth AWSProfile: %s", auth.AWSProfile)
 
-	session, err := aws.NewSharedSession(auth.AWSProfile)
-	if err != nil {
-		klog.Fatalf("Cannot create an AWS session: %s", err)
-	}
-
-	if !session.IsExpired() {
-		fmt.Printf("%v Your token is still valid. Would you like to renew it? [Y/n] ", promptui.IconInitial)
-		var answer string
-		fmt.Scanln(&answer)
-
-		if answer != "Y" {
-			return
-		}
-	}
-
 	execer := executil.New()
 	runner := awsazurelogin.New(execer)
 
-	err = auth.Configure()
+	err := auth.Configure()
 	if err != nil {
 		klog.Fatalf("Error when configuring the AWS profile: %s", err)
 	}
 
-	runner.Authenticate(auth)
+	klog.V(2).Info("Profile configured for aws-azure-login tool")
+
+	err = runner.Authenticate(auth)
+	if err != nil {
+		klog.Fatalf("Error on authentication: %s", err)
+	}
+}
+
+// TODO add outputs
+func authWithAWSSTS(provider *config.AuthProvider, account *config.AuthAccount) {
+	var sess *aws.SharedSession
+	var err error
+	if account.DependsOn != "" {
+		auth := authAccountsConfig.FindAuthAccount(account.DependsOn)
+
+		fmt.Printf("%v Depends on %s\n", promptui.IconWarn, account.DependsOn)
+
+		authAccount(auth)
+		sess, err = aws.NewSharedSession(auth.AWSProfile)
+		if err != nil {
+			klog.Fatalf("Error when creating a new session: %s", err)
+		}
+	} else {
+		sess, err = aws.NewSharedSession("")
+		if err != nil {
+			klog.Fatalf("Error when creating a new session: %s", err)
+		}
+	}
+
+	// TODO handle the duration
+	a := awssts.NewAssumeRole(1000,
+		account.AWSRole,
+		provider.UserName,
+		sess,
+		account.AWSProfile,
+		account.Region,
+	)
+
+	err = a.Authenticate()
+	if err != nil {
+		klog.Fatalf("Error when trying the get a STS session: %s", err)
+	}
+
+	fmt.Printf("%v Authenticated on %s\n", promptui.IconGood, account.AuthProvider)
 }

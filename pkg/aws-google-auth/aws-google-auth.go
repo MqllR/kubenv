@@ -42,10 +42,11 @@ type AWSGoogleAuth struct {
 }
 
 // NewAWSGoogleAuth create an AWSGoogleAuth struct
-func NewAWSGoogleAuth(idp string, sp string) *AWSGoogleAuth {
+func NewAWSGoogleAuth(idp string, sp string, username string) *AWSGoogleAuth {
 	return &AWSGoogleAuth{
-		IDP: idp,
-		SP:  sp,
+		IDP:      idp,
+		SP:       sp,
+		UserName: username,
 	}
 }
 
@@ -111,10 +112,8 @@ func (runner *runner) Authenticate(auth *AWSGoogleAuth) error {
 		auth.AWSRole,
 		"-R",
 		auth.Region,
-	}
-
-	if auth.UserName != "" {
-		args = append(args, []string{"-u", auth.UserName}...)
+		"-u",
+		auth.UserName,
 	}
 
 	if klog.V(5) {
