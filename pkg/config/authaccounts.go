@@ -12,6 +12,7 @@ type AuthAccount struct {
 	AWSRole      string `yaml:"AWSRole,omitempty"`
 	Region       string `yaml:"Region,omitempty"`
 	DependsOn    string `yaml:"DependsOn,omitempty"`
+	Duration     int    `yaml:"Duration,omitempty"`
 }
 
 type AuthAccounts struct {

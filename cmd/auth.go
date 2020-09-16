@@ -116,6 +116,7 @@ func authWithGoogleAuth(provider *config.AuthProvider, account *config.AuthAccou
 	klog.V(2).Infof("Authenticate using aws-google-auth AWSRole: %s", auth.AWSRole)
 	klog.V(2).Infof("Authenticate using aws-google-auth AWSProfile: %s", auth.AWSProfile)
 	klog.V(2).Infof("Authenticate using aws-google-auth Region: %s", auth.Region)
+	klog.V(2).Infof("Authenticate using aws-azure-login Duration: %d", auth.Duration)
 
 	execer := executil.New()
 	runner := awsgoogleauth.New(execer)
@@ -143,9 +144,11 @@ func authWithAzureLogin(provider *config.AuthProvider, account *config.AuthAccou
 
 	auth.AWSRole = account.AWSRole
 	auth.AWSProfile = account.AWSProfile
+	auth.Duration = account.Duration
 
-	klog.V(2).Infof("Authenticate using aws-google-auth AWSRole: %s", auth.AWSRole)
-	klog.V(2).Infof("Authenticate using aws-google-auth AWSProfile: %s", auth.AWSProfile)
+	klog.V(2).Infof("Authenticate using aws-azure-login AWSRole: %s", auth.AWSRole)
+	klog.V(2).Infof("Authenticate using aws-azure-login AWSProfile: %s", auth.AWSProfile)
+	klog.V(2).Infof("Authenticate using aws-azure-login Duration: %d", auth.Duration)
 
 	execer := executil.New()
 	runner := awsazurelogin.New(execer)
@@ -163,7 +166,6 @@ func authWithAzureLogin(provider *config.AuthProvider, account *config.AuthAccou
 	}
 }
 
-// TODO add outputs
 func authWithAWSSTS(provider *config.AuthProvider, account *config.AuthAccount) {
 	var sess *aws.SharedSession
 	var err error
@@ -184,14 +186,16 @@ func authWithAWSSTS(provider *config.AuthProvider, account *config.AuthAccount) 
 		}
 	}
 
-	// TODO handle the duration
-	a := awssts.NewAssumeRole(1000,
+	a := awssts.NewAssumeRole(
 		account.AWSRole,
 		provider.UserName,
 		sess,
 		account.AWSProfile,
 		account.Region,
 	)
+
+	d := int64(account.Duration)
+	a.Duration = &d
 
 	err = a.Authenticate()
 	if err != nil {

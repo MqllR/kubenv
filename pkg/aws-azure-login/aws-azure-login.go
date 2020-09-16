@@ -20,7 +20,7 @@ type Interface interface {
 const (
 	AWSAzureLoginCmd = "aws-azure-login"
 	npmCmd           = "sudo npm -g"
-	DefaultDuration  = 12
+	DefaultDuration  = 43200
 )
 
 type AWSAzureLogin struct {
@@ -89,7 +89,7 @@ func (auth *AWSAzureLogin) Configure() error {
 		"azure_app_id_uri":             auth.AppIDUri,
 		"azure_default_username":       auth.UserName,
 		"azure_default_role_arn":       auth.AWSRole,
-		"azure_default_duration_hours": strconv.Itoa(auth.Duration),
+		"azure_default_duration_hours": strconv.Itoa(auth.Duration / 60 / 60), // Seconds to hours
 		"azure_default_remember_me":    strconv.FormatBool(auth.RemeberMe),
 	})
 

@@ -9,8 +9,12 @@ import (
 	"github.com/mqllr/kubenv/pkg/aws"
 )
 
+var (
+	DefaultDuration int64 = 3600
+)
+
 type AssumeRole struct {
-	duration        *int64
+	Duration        *int64
 	roleArn         *string
 	roleSessionName *string
 	session         *aws.SharedSession
@@ -18,11 +22,10 @@ type AssumeRole struct {
 	region          string
 }
 
-func NewAssumeRole(duration int64, roleArn string,
+func NewAssumeRole(roleArn string,
 	roleSessionName string, session *aws.SharedSession,
 	profile string, region string) *AssumeRole {
 	return &AssumeRole{
-		duration:        &duration,
 		roleArn:         &roleArn,
 		roleSessionName: &roleSessionName,
 		session:         session,
@@ -31,9 +34,17 @@ func NewAssumeRole(duration int64, roleArn string,
 	}
 }
 
+func (a *AssumeRole) SetDefaults() {
+	if *a.Duration == 0 {
+		a.Duration = &DefaultDuration
+	}
+}
+
 func (a *AssumeRole) Authenticate() error {
+	a.SetDefaults()
+
 	input := &sts.AssumeRoleInput{
-		DurationSeconds: a.duration,
+		DurationSeconds: a.Duration,
 		RoleArn:         a.roleArn,
 		RoleSessionName: a.roleSessionName,
 	}
