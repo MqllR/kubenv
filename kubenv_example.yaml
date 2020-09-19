@@ -1,0 +1,43 @@
+---
+kubeConfig: "/home/test/.kube/config" # Optional, default to $HOME/.kube/config
+
+authProviders:
+  aws-google-auth: {}
+    IDP: "Bzbj37S"
+    SP: "91010906235"
+    UserName: "my@e.mail"
+  aws-azure-login: {}
+    TenantID: "Bzbj37S"
+    AppIDUri: "91010906235"
+    UserName: "my@e.mail"
+  aws-sts: {}
+    UserName: "my@e.mail"
+
+authAccounts: {}
+  dev:
+    AuthProvider: aws-google-auth
+    AWSProfile: dev
+    AWSRole: arn:aws:iam::121638826155:role/AdminDev
+    Region: eu-central-1
+  test:
+    AuthProvider: aws-azure-login
+    AWSProfile: test
+    AWSRole: arn:aws:iam::125262463473:role/AdminTest
+    Duration: 36000    # In seconds
+  doublejump:
+    AuthProvider: aws-sts
+    AWSProfile: doublejump
+    AWSRole: arn:aws:iam::125262463543:role/DoubleJumpTest
+    DependsOn: test
+
+k8sConfigs: {}
+  dev:
+    sync:
+      mode: local
+      path: /tmp/k8senv/dev/config
+    authAccount: dev
+  test:
+    sync:
+      mode: local
+      path: /tmp/k8senv/test/config
+    authAccount: doublejump

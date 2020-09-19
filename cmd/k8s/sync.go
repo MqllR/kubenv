@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"path"
 
 	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
@@ -17,8 +16,6 @@ import (
 )
 
 const k8sConfigFile = "config"
-
-var kubeConfigsPath string
 
 var SyncCmd = &cobra.Command{
 	Use:   "sync",
@@ -36,60 +33,52 @@ var SyncCmd = &cobra.Command{
 	},
 }
 
-func init() {
-	SyncCmd.Flags().StringVarP(&kubeConfigsPath, "kubeconfigs-path", "p", "", "Path to the directory where all kubeconfigs are stored (required)")
-	SyncCmd.MarkFlagRequired("kubeconfigs-path")
-}
-
-// sync command
 func sync(args []string) {
-	// TODO having a config object for k8sconfigs
-	var (
-		k8sConfigs = viper.GetStringMap("k8sconfigs")
-		kubeConfig = viper.GetString("kubeconfig")
-	)
+	kubeConfig := viper.GetString("kubeconfig")
 
-	err := existAndDirectory(kubeConfigsPath)
+	k8sConfigs, err := config.NewK8SConfigs()
 	if err != nil {
-		klog.Fatalf("%s", err)
+		klog.Fatalf("Error when loading k8sConfigs: %s", err)
 	}
-
-	fmt.Printf("%v Start the synchronization of kubeconfigs into %s ...\n", promptui.IconSelect, kubeConfig)
-
-	fullConfig := k8s.NewKubeConfig()
 
 	authAccounts, err := config.NewAuthAccountsConfig()
 	if err != nil {
-		klog.Fatal("Error on loading the authAccounts")
+		klog.Fatal("Error when loading the authAccounts")
 	}
 
-	for k8sconfig := range k8sConfigs {
-		configPath := path.Join([]string{kubeConfigsPath, k8sconfig, k8sConfigFile}...)
-		fmt.Printf("Sync kubeconfig %s", k8sconfig)
+	fmt.Printf("%v Start the synchronization of kubeconfig file into %s ...\n", promptui.IconSelect, kubeConfig)
 
-		err := existAndDirectory(configPath)
-		if err != nil {
-			fmt.Printf(" %v %s\n", promptui.IconBad, err)
-			continue
-		}
+	fullConfig := k8s.NewKubeConfig()
 
-		kconfig, err := ioutil.ReadFile(configPath)
-		if err != nil {
-			fmt.Printf(" %v %s\n", promptui.IconBad, err)
-			continue
+	for name, config := range k8sConfigs.Configs {
+		fmt.Printf("Sync kubeconfig %s", name)
+
+		var kconfig []byte
+
+		if config.Sync.Mode == "local" {
+			klog.V(2).Info("Sync start in local mode")
+			if _, err := os.Stat(config.Sync.Path); os.IsNotExist(err) {
+				fmt.Printf(" %v %v\n", promptui.IconBad, err)
+				continue
+			}
+			klog.V(2).Infof("File %s exist", config.Sync.Path)
+
+			kconfig, err = ioutil.ReadFile(config.Sync.Path)
+			if err != nil {
+				fmt.Printf(" %v %v\n", promptui.IconBad, err)
+				continue
+			}
 		}
 
 		kubeconfig := k8s.NewKubeConfig()
 
 		if err = kubeconfig.Unmarshal(kconfig); err != nil {
-			fmt.Printf(" %v Cannot unmarshal config %s: %s\n", promptui.IconBad, configPath, err)
+			fmt.Printf(" %v Cannot unmarshal config %s: %s\n", promptui.IconBad, name, err)
 			continue
 		}
 
-		// Retrieve account's profile
-		accountKey := "k8sconfigs." + k8sconfig + ".authAccount"
-		if viper.IsSet(accountKey) {
-			account := authAccounts.FindAuthAccount(viper.GetString(accountKey))
+		if config.AuthAccount != "" {
+			account := authAccounts.FindAuthAccount(config.AuthAccount)
 
 			for _, user := range kubeconfig.Users {
 				env := &k8s.Env{Name: "AWS_PROFILE", Value: account.AWSProfile}
@@ -102,18 +91,4 @@ func sync(args []string) {
 	}
 
 	fullConfig.WriteFile(kubeConfig)
-}
-
-func existAndDirectory(path string) error {
-	info, err := os.Stat(kubeConfigsPath)
-
-	if os.IsNotExist(err) {
-		return fmt.Errorf("File %s doesn't exist: %s", path, err)
-	}
-
-	if !info.IsDir() {
-		return fmt.Errorf("%s is not a directory", path)
-	}
-
-	return nil
 }

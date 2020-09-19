@@ -124,3 +124,21 @@ func (kubeConfig *KubeConfig) ToString() (string, error) {
 	config, err := kubeConfig.Marshal()
 	return string(config), err
 }
+
+// ToString convert a KubeConfig in a string
+func (kubeConfig *KubeConfig) IsContextExist(context string) bool {
+	exist := func(slice []string, item string) bool {
+		for _, s := range slice {
+			if item == s {
+				return true
+			}
+		}
+		return false
+	}
+
+	if !exist(kubeConfig.GetContextNames(), context) {
+		return false
+	}
+
+	return true
+}

@@ -13,9 +13,14 @@ import (
 	"github.com/mqllr/kubenv/pkg/utils"
 )
 
+var (
+	context   string
+	autoLogin bool
+)
+
 var UseContextCmd = &cobra.Command{
-	Use:   "use-context [context]",
-	Short: "Select a k8s context",
+	Use:   "use-context",
+	Short: "Switch from k8s context",
 	Args:  cobra.MaximumNArgs(1),
 	PreRun: func(cmd *cobra.Command, args []string) {
 		helper.IsConfigExist(
@@ -29,12 +34,14 @@ var UseContextCmd = &cobra.Command{
 	},
 }
 
+func init() {
+	UseContextCmd.Flags().StringVarP(&context, "context", "c", "", "Kubernetes context to switch")
+	UseContextCmd.Flags().BoolVarP(&autoLogin, "auto-login", "a", true, "Auto-login if authAccount is set")
+}
+
 // use-context command
 func useContext(args []string) {
-	var (
-		kubeConfig = viper.GetString("kubeconfig")
-	)
-
+	kubeConfig := viper.GetString("kubeconfig")
 	kubeconfig := k8s.NewKubeConfig()
 
 	config, err := ioutil.ReadFile(kubeConfig)
@@ -50,21 +57,11 @@ func useContext(args []string) {
 
 	var selectedContext string
 
-	if len(args) == 1 {
-		exist := func(slice []string, item string) bool {
-			for _, s := range slice {
-				if item == s {
-					return true
-				}
-			}
-			return false
+	if context != "" {
+		if !kubeconfig.IsContextExist(context) {
+			klog.Fatalf("Context %s doesn't exist", context)
 		}
-
-		if !exist(contexts, args[0]) {
-			klog.Fatalf("Context %s doesn't exist", args[0])
-		}
-
-		selectedContext = args[0]
+		selectedContext = context
 	} else {
 		sort.Strings(contexts)
 

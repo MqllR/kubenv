@@ -6,4 +6,8 @@ var (
 		"aws-azure-login",
 		"aws-sts",
 	}
+
+	AvailableK8SSyncMode = []string{
+		"local",
+	}
 )
