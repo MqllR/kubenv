@@ -39,5 +39,5 @@ jobs:
         repo_token: ${{ secrets.GITHUB_TOKEN }}
         file: kubenv-*-amd64
         asset_name: kubenv
-        tag: ${{ github.ref }}
+        tag: alpha
         file_glob: true
