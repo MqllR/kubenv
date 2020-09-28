@@ -1,7 +1,9 @@
 package k8s
 
 import (
+	"fmt"
 	"io/ioutil"
+	"os"
 
 	"gopkg.in/yaml.v2"
 )
@@ -75,6 +77,26 @@ func NewKubeConfig() *KubeConfig {
 		Preferences: map[string]interface{}{},
 		Kind:        "Config",
 	}
+}
+
+// NewKubeConfig create a new struct KubeConfig
+func NewKubeConfigFromFile(kubeconfig string) (*KubeConfig, error) {
+	if _, err := os.Stat(kubeconfig); os.IsNotExist(err) {
+		return nil, fmt.Errorf("File doesn't exist: %s", err)
+	}
+
+	content, err := ioutil.ReadFile(kubeconfig)
+	if err != nil {
+		return nil, fmt.Errorf("Error when reading kubeconfig file: %s", err)
+	}
+
+	k := NewKubeConfig()
+
+	if err = k.Unmarshal(content); err != nil {
+		return nil, fmt.Errorf("Can't unmarshal the kubeconfig file: %s", err)
+	}
+
+	return k, nil
 }
 
 // Unmarshal fill a kubeConfig struct with yaml.Unmarshal

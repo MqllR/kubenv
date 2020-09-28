@@ -1,7 +1,6 @@
 package k8s
 
 import (
-	"io/ioutil"
 	"sort"
 
 	"github.com/spf13/cobra"
@@ -42,15 +41,10 @@ func init() {
 // use-context command
 func useContext(args []string) {
 	kubeConfig := viper.GetString("kubeconfig")
-	kubeconfig := k8s.NewKubeConfig()
+	kubeconfig, err := k8s.NewKubeConfigFromFile(kubeConfig)
 
-	config, err := ioutil.ReadFile(kubeConfig)
 	if err != nil {
-		klog.Fatalf("Cannot read file %s: %s", kubeConfig, err)
-	}
-
-	if err = kubeconfig.Unmarshal(config); err != nil {
-		klog.Fatalf("Cannot unmarshal config: %s", err)
+		klog.Fatalf("Cannot load kubeconfig file: %s", err)
 	}
 
 	contexts := kubeconfig.GetContextNames()

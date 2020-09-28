@@ -2,8 +2,6 @@ package k8s
 
 import (
 	"fmt"
-	"io/ioutil"
-	"os"
 
 	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
@@ -53,40 +51,28 @@ func sync(args []string) {
 	for name, config := range k8sConfigs.Configs {
 		fmt.Printf("Sync kubeconfig %s", name)
 
-		var kconfig []byte
+		var k *k8s.KubeConfig
 
 		if config.Sync.Mode == "local" {
 			klog.V(2).Info("Sync start in local mode")
-			if _, err := os.Stat(config.Sync.Path); os.IsNotExist(err) {
-				fmt.Printf(" %v %v\n", promptui.IconBad, err)
-				continue
-			}
-			klog.V(2).Infof("File %s exist", config.Sync.Path)
 
-			kconfig, err = ioutil.ReadFile(config.Sync.Path)
+			k, err = k8s.NewKubeConfigFromFile(config.Sync.Path)
 			if err != nil {
-				fmt.Printf(" %v %v\n", promptui.IconBad, err)
+				fmt.Printf(" %v Error when loading the kubeconfig file %s: %s\n", promptui.IconBad, name, err)
 				continue
 			}
-		}
-
-		kubeconfig := k8s.NewKubeConfig()
-
-		if err = kubeconfig.Unmarshal(kconfig); err != nil {
-			fmt.Printf(" %v Cannot unmarshal config %s: %s\n", promptui.IconBad, name, err)
-			continue
 		}
 
 		if config.AuthAccount != "" {
 			account := authAccounts.FindAuthAccount(config.AuthAccount)
 
-			for _, user := range kubeconfig.Users {
+			for _, user := range k.Users {
 				env := &k8s.Env{Name: "AWS_PROFILE", Value: account.AWSProfile}
 				user.User.Exec.Env = []*k8s.Env{env}
 			}
 		}
 
-		fullConfig.Append(kubeconfig)
+		fullConfig.Append(k)
 		fmt.Printf(" %v\n", promptui.IconGood)
 	}
 
