@@ -41,3 +41,4 @@ jobs:
         asset_name: kubenv
         tag: alpha
         file_glob: true
+        overwrite: true
