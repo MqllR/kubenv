@@ -26,8 +26,9 @@ type ContextWithName struct {
 }
 
 type Context struct {
-	Cluster string `yaml:"cluster"`
-	User    string `yaml:"user"`
+	Cluster   string `yaml:"cluster"`
+	Namespace string `yaml:"namespace,omitempty"`
+	User      string `yaml:"user"`
 }
 
 // User ...
