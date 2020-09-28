@@ -1,5 +1,7 @@
 # kubenv
 
+[![Actions Status](https://github.com/MqllR/kubenv/workflows/Build%20and%20release/badge.svg)](https://github.com/MqllR/kubenv/actions)
+
 WIP WIP
 
 ## Install
