@@ -7,21 +7,9 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/mqllr/kubenv/pkg/auth"
 	"k8s.io/klog"
-	utilexec "k8s.io/utils/exec"
 )
-
-// Interface is an injectable interface for running aws-google-auth commands
-type Interface interface {
-	// Authenticate try to authenticate using aws-google-auth
-	Authenticate(auth *AWSGoogleAuth) error
-	// GetVersion returns the "X.Y" version string for aws-google-auth.
-	GetVersion() (string, error)
-	// GetRemoteVersion returns the "X.Y" version string for aws-google-auth from pypi
-	GetRemoteVersion() (string, error)
-	// Install will install the latest version aws-google-auth
-	Install() error
-}
 
 const (
 	AWSGoogleAuthCmd = "aws-google-auth"
@@ -39,6 +27,7 @@ type AWSGoogleAuth struct {
 	Duration   int
 	AWSProfile string
 	AWSRole    string
+	runner     *auth.Interface
 }
 
 // NewAWSGoogleAuth create an AWSGoogleAuth struct
@@ -78,19 +67,8 @@ func (auth *AWSGoogleAuth) Validate() bool {
 	return true
 }
 
-type runner struct {
-	exec utilexec.Interface
-}
-
-// New returns a new Interface which will exec aws-google-auth
-func New(exec utilexec.Interface) Interface {
-	return &runner{
-		exec: exec,
-	}
-}
-
 // Authenticate a username with aws-google-auth
-func (runner *runner) Authenticate(auth *AWSGoogleAuth) error {
+func (auth *AWSGoogleAuth) Authenticate(auth *AWSGoogleAuth) error {
 	auth.SetDefaults()
 
 	valid := auth.Validate()
@@ -122,7 +100,7 @@ func (runner *runner) Authenticate(auth *AWSGoogleAuth) error {
 
 	klog.V(2).Infof("Running cmd: %s %s", AWSGoogleAuthCmd, strings.Join(args, " "))
 
-	cmd := runner.exec.Command(AWSGoogleAuthCmd, args...)
+	cmd := auth.runner.exec.Command(AWSGoogleAuthCmd, args...)
 	cmd.SetStdin(os.Stdin)
 	cmd.SetStdout(os.Stdout)
 	cmd.SetStderr(os.Stderr)
@@ -136,10 +114,10 @@ func (runner *runner) Authenticate(auth *AWSGoogleAuth) error {
 }
 
 // GetVersion return the version number of the aws-google-auth tools
-func (runner *runner) GetVersion() (string, error) {
+func (auth *AWSGoogleAuth) GetVersion() (string, error) {
 	args := []string{"-V"}
 
-	bytes, err := runner.exec.Command(AWSGoogleAuthCmd, args...).CombinedOutput()
+	bytes, err := auth.runner.exec.Command(AWSGoogleAuthCmd, args...).CombinedOutput()
 
 	if err != nil {
 		return "", fmt.Errorf("Error when getting version, error: %v", err)
@@ -156,10 +134,10 @@ func (runner *runner) GetVersion() (string, error) {
 }
 
 // GetRemoteVersion return the version number of the aws-google-auth from the pypi repository
-func (runner *runner) GetRemoteVersion() (string, error) {
+func (auth *AWSGoogleAuth) GetRemoteVersion() (string, error) {
 	searchPattern := `^aws\-google\-auth \((?P<Version>` + VersionPattern + `)\)`
 
-	bytes, err := runner.exec.Command(pipCmd, []string{"search", AWSGoogleAuthCmd}...).CombinedOutput()
+	bytes, err := auth.runner.exec.Command(pipCmd, []string{"search", AWSGoogleAuthCmd}...).CombinedOutput()
 
 	if err != nil {
 		return "", fmt.Errorf("Error when executing pip search, error: %v", err)
@@ -176,8 +154,8 @@ func (runner *runner) GetRemoteVersion() (string, error) {
 }
 
 // Install will install the latest version aws-google-auth
-func (runner *runner) Install() error {
-	cmd := runner.exec.Command(pipCmd, []string{"install", AWSGoogleAuthCmd + "[u2f]"}...)
+func (auth *AWSGoogleAuth) Install() error {
+	cmd := auth.runner.exec.Command(pipCmd, []string{"install", AWSGoogleAuthCmd + "[u2f]"}...)
 
 	cmd.SetStdin(os.Stdin)
 	cmd.SetStdout(os.Stdout)

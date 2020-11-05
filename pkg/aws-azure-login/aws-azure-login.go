@@ -4,11 +4,9 @@ import (
 	"fmt"
 	"os"
 	"strconv"
-	"strings"
 
+	"github.com/mqllr/kubenv/pkg/auth"
 	"github.com/mqllr/kubenv/pkg/aws"
-	"k8s.io/klog"
-	utilexec "k8s.io/utils/exec"
 )
 
 // Interface is an injectable interface for running aws-azure-login commands
@@ -43,38 +41,38 @@ func NewAWSAzureLogin(tid string, addid string, username string) *AWSAzureLogin 
 }
 
 // SetDefaults inject default value if not set
-func (auth *AWSAzureLogin) SetDefaults() {
-	if auth.Duration == 0 {
-		auth.Duration = DefaultDuration
+func (a *AWSAzureLogin) SetDefaults() {
+	if a.Duration == 0 {
+		a.Duration = DefaultDuration
 	}
 }
 
 // Validate ensure every fields are correctly defined
-func (auth *AWSAzureLogin) ConfigureValidate() bool {
-	if auth.TenantID == "" {
+func (a *AWSAzureLogin) ConfigureValidate() bool {
+	if a.TenantID == "" {
 		return false
 	}
-	if auth.AppIDUri == "" {
+	if a.AppIDUri == "" {
 		return false
 	}
-	if auth.AWSProfile == "" {
+	if a.AWSProfile == "" {
 		return false
 	}
-	if auth.AWSRole == "" {
+	if a.AWSRole == "" {
 		return false
 	}
-	if auth.UserName == "" {
+	if a.UserName == "" {
 		return false
 	}
 
 	return true
 }
 
-// Authenticate a username with aws-google-auth
-func (auth *AWSAzureLogin) Configure() error {
-	auth.SetDefaults()
+// Authenticate a username with aws-google-a
+func (a *AWSAzureLogin) Configure() error {
+	a.SetDefaults()
 
-	valid := auth.ConfigureValidate()
+	valid := a.ConfigureValidate()
 	if !valid {
 		return fmt.Errorf("Error aws-azure-login profile is invalid")
 	}
@@ -84,13 +82,13 @@ func (auth *AWSAzureLogin) Configure() error {
 		return err
 	}
 
-	err = ini.EnsureSectionAndSave("profile "+auth.AWSProfile, map[string]string{
-		"azure_tenant_id":              auth.TenantID,
-		"azure_app_id_uri":             auth.AppIDUri,
-		"azure_default_username":       auth.UserName,
-		"azure_default_role_arn":       auth.AWSRole,
-		"azure_default_duration_hours": strconv.Itoa(auth.Duration / 60 / 60), // Seconds to hours
-		"azure_default_remember_me":    strconv.FormatBool(auth.RemeberMe),
+	err = ini.EnsureSectionAndSave("profile "+a.AWSProfile, map[string]string{
+		"azure_tenant_id":              a.TenantID,
+		"azure_app_id_uri":             a.AppIDUri,
+		"azure_default_username":       a.UserName,
+		"azure_default_role_arn":       a.AWSRole,
+		"azure_default_duration_hours": strconv.Itoa(a.Duration / 60 / 60), // Seconds to hours
+		"azure_default_remember_me":    strconv.FormatBool(a.RemeberMe),
 	})
 
 	if err != nil {
@@ -100,25 +98,12 @@ func (auth *AWSAzureLogin) Configure() error {
 	return nil
 }
 
-type runner struct {
-	exec utilexec.Interface
-}
-
-// New returns a new Interface which will exec aws-google-auth
-func New(exec utilexec.Interface) Interface {
-	return &runner{
-		exec: exec,
-	}
-}
-
-func (runner *runner) Authenticate(auth *AWSAzureLogin) error {
+func (runner *auth.Runner) Authenticate(a *AWSAzureLogin) error {
 	args := []string{
 		"--no-prompt",
 		"--profile",
-		auth.AWSProfile,
+		a.AWSProfile,
 	}
-
-	klog.V(2).Infof("Running cmd: %s %s", AWSAzureLoginCmd, strings.Join(args, " "))
 
 	cmd := runner.exec.Command(AWSAzureLoginCmd, args...)
 	cmd.SetStdin(os.Stdin)
