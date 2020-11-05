@@ -14,7 +14,7 @@ import (
 	awssts "github.com/mqllr/kubenv/pkg/aws-sts"
 	"github.com/mqllr/kubenv/pkg/config"
 	"github.com/mqllr/kubenv/pkg/helper"
-	"github.com/mqllr/kubenv/pkg/utils"
+	"github.com/mqllr/kubenv/pkg/prompt"
 )
 
 var (
@@ -67,7 +67,7 @@ func auth() {
 		authAccount(authAccountsConfig.FindAuthAccount(account))
 		break
 	default:
-		item, err := utils.Prompt("Select an account", authAccountsConfig.ListAuthAccountNames())
+		item, err := prompt.Prompt("Select an account", authAccountsConfig.ListAuthAccountNames())
 		if err != nil {
 			klog.Fatalf("%s", err)
 		}

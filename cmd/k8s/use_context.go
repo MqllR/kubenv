@@ -9,7 +9,7 @@ import (
 
 	"github.com/mqllr/kubenv/pkg/helper"
 	"github.com/mqllr/kubenv/pkg/k8s"
-	"github.com/mqllr/kubenv/pkg/utils"
+	"github.com/mqllr/kubenv/pkg/prompt"
 )
 
 var (
@@ -59,7 +59,7 @@ func useContext(args []string) {
 	} else {
 		sort.Strings(contexts)
 
-		selectedContext, err = utils.Prompt("Select the context", contexts)
+		selectedContext, err = prompt.Prompt("Select the context", contexts)
 		if err != nil {
 			klog.Fatalf("%s", err)
 		}
