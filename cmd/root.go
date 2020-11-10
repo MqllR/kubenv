@@ -10,6 +10,7 @@ import (
 
 	"github.com/mqllr/kubenv/cmd/dep"
 	"github.com/mqllr/kubenv/cmd/k8s"
+	"github.com/mqllr/kubenv/pkg/config"
 )
 
 var (
@@ -71,10 +72,8 @@ func initConfig() {
 
 	viper.SetDefault("kubeConfig", os.Getenv("HOME")+"/.kube/config")
 
-	err := viper.ReadInConfig()
+	err := config.LoadConfig()
 	if err != nil {
-		klog.Fatalf("Using config file %s: %s", viper.ConfigFileUsed(), err)
+		klog.Fatal(err)
 	}
-
-	klog.V(5).Infof("Config file content: %s", viper.AllSettings())
 }

@@ -5,7 +5,6 @@ import (
 
 	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 	"k8s.io/klog"
 
 	"github.com/mqllr/kubenv/pkg/config"
@@ -32,39 +31,28 @@ var SyncCmd = &cobra.Command{
 }
 
 func sync(args []string) {
-	kubeConfig := viper.GetString("kubeconfig")
+	fmt.Printf("%v Start the synchronization of kubeconfig file into %s ...\n", promptui.IconSelect, config.Conf.KubeConfig)
 
-	k8sConfigs, err := config.NewK8SConfigs()
-	if err != nil {
-		klog.Fatalf("Error when loading k8sConfigs: %s", err)
-	}
-
-	authAccounts, err := config.NewAuthAccountsConfig()
-	if err != nil {
-		klog.Fatal("Error when loading the authAccounts")
-	}
-
-	fmt.Printf("%v Start the synchronization of kubeconfig file into %s ...\n", promptui.IconSelect, kubeConfig)
-
+	var err error
 	fullConfig := k8s.NewKubeConfig()
 
-	for name, config := range k8sConfigs.Configs {
+	for name, conf := range config.Conf.K8SConfigs {
 		fmt.Printf("Sync kubeconfig %s", name)
 
 		var k *k8s.KubeConfig
 
-		if config.Sync.Mode == "local" {
+		if conf.Sync.Mode == "local" {
 			klog.V(2).Info("Sync start in local mode")
 
-			k, err = k8s.NewKubeConfigFromFile(config.Sync.Path)
+			k, err = k8s.NewKubeConfigFromFile(conf.Sync.Path)
 			if err != nil {
 				fmt.Printf(" %v Error when loading the kubeconfig file %s: %s\n", promptui.IconBad, name, err)
 				continue
 			}
 		}
 
-		if config.AuthAccount != "" {
-			account := authAccounts.FindAuthAccount(config.AuthAccount)
+		if conf.AuthAccount != "" {
+			account := config.Conf.FindAuthAccount(conf.AuthAccount)
 
 			for _, user := range k.Users {
 				env := &k8s.Env{Name: "AWS_PROFILE", Value: account.AWSProfile}
@@ -76,5 +64,5 @@ func sync(args []string) {
 		fmt.Printf(" %v\n", promptui.IconGood)
 	}
 
-	fullConfig.WriteFile(kubeConfig)
+	fullConfig.WriteFile(config.Conf.KubeConfig)
 }

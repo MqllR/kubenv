@@ -4,9 +4,9 @@ import (
 	"sort"
 
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 	"k8s.io/klog"
 
+	"github.com/mqllr/kubenv/pkg/config"
 	"github.com/mqllr/kubenv/pkg/helper"
 	"github.com/mqllr/kubenv/pkg/k8s"
 	"github.com/mqllr/kubenv/pkg/prompt"
@@ -40,8 +40,7 @@ func init() {
 
 // use-context command
 func useContext(args []string) {
-	kubeConfig := viper.GetString("kubeconfig")
-	kubeconfig, err := k8s.NewKubeConfigFromFile(kubeConfig)
+	kubeconfig, err := k8s.NewKubeConfigFromFile(config.Conf.KubeConfig)
 
 	if err != nil {
 		klog.Fatalf("Cannot load kubeconfig file: %s", err)
@@ -66,5 +65,5 @@ func useContext(args []string) {
 	}
 
 	kubeconfig.CurrentContext = selectedContext
-	kubeconfig.WriteFile(kubeConfig)
+	kubeconfig.WriteFile(config.Conf.KubeConfig)
 }

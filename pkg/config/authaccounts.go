@@ -1,11 +1,5 @@
 package config
 
-import (
-	"fmt"
-
-	"github.com/spf13/viper"
-)
-
 type AuthAccount struct {
 	AuthProvider string `yaml:"AuthProvider"`
 	AWSProfile   string `yaml:"AWSProfile,omitempty"`
@@ -15,26 +9,8 @@ type AuthAccount struct {
 	Duration     int    `yaml:"Duration,omitempty"`
 }
 
-type AuthAccounts struct {
-	Envs map[string]*AuthAccount `mapstructure:"authAccounts"`
-}
-
-func NewAuthAccountsConfig() (*AuthAccounts, error) {
-	var auth AuthAccounts
-	err := viper.Unmarshal(&auth)
-	if err != nil {
-		return nil, fmt.Errorf("unable to decode into struct, %v", err)
-	}
-
-	err = auth.Validate()
-	if err != nil {
-		return nil, err
-	}
-
-	return &auth, nil
-}
-
 // TODO we should test if the provider is declared
+/*
 func (a *AuthAccounts) Validate() error {
 	for env, auth := range a.Envs {
 		if auth.AuthProvider == "" {
@@ -52,20 +28,4 @@ func (a *AuthAccounts) Validate() error {
 
 	return nil
 }
-
-func (a *AuthAccounts) FindAuthAccount(account string) *AuthAccount {
-	if acc, ok := a.Envs[account]; ok {
-		return acc
-	}
-
-	return &AuthAccount{}
-}
-
-func (a *AuthAccounts) ListAuthAccountNames() []string {
-	var accounts []string
-	for account := range a.Envs {
-		accounts = append(accounts, account)
-	}
-
-	return accounts
-}
+*/

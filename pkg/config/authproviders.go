@@ -1,11 +1,5 @@
 package config
 
-import (
-	"fmt"
-
-	"github.com/spf13/viper"
-)
-
 type AuthProvider struct {
 	UserName string `yaml:"UserName"`
 	IDP      string `yaml:"IDP,omitempty"`
@@ -14,25 +8,7 @@ type AuthProvider struct {
 	TenantID string `yaml:"TenantID,omitempty"`
 }
 
-type AuthProviders struct {
-	Providers map[string]*AuthProvider `mapstructure:"authProviders"`
-}
-
-func NewAuthProvidersConfig() (*AuthProviders, error) {
-	var auth AuthProviders
-	err := viper.Unmarshal(&auth)
-	if err != nil {
-		return nil, fmt.Errorf("unable to decode into struct, %v", err)
-	}
-
-	err = auth.Validate()
-	if err != nil {
-		return nil, err
-	}
-
-	return &auth, nil
-}
-
+/*
 func (a *AuthProviders) Validate() error {
 	for provider, auth := range a.Providers {
 		if auth.UserName == "" {
@@ -63,11 +39,4 @@ func (a *AuthProviders) Validate() error {
 
 	return nil
 }
-
-func (a *AuthProviders) FindAuthProvider(provider string) *AuthProvider {
-	if acc, ok := a.Providers[provider]; ok {
-		return acc
-	}
-
-	return &AuthProvider{}
-}
+*/

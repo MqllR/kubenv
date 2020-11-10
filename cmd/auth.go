@@ -18,10 +18,8 @@ import (
 )
 
 var (
-	account             string
-	all                 bool
-	authAccountsConfig  *config.AuthAccounts
-	authProvidersConfig *config.AuthProviders
+	account string
+	all     bool
 )
 
 var authCmd = &cobra.Command{
@@ -46,33 +44,22 @@ func init() {
 }
 
 func auth() {
-	var err error
-	authAccountsConfig, err = config.NewAuthAccountsConfig()
-	if err != nil {
-		klog.Fatalf("Syntax error for authAccounts: %s", err)
-	}
-
-	authProvidersConfig, err = config.NewAuthProvidersConfig()
-	if err != nil {
-		klog.Fatalf("Syntax error for AuthProviders: %s", err)
-	}
-
 	switch {
 	case all:
-		for _, env := range authAccountsConfig.ListAuthAccountNames() {
-			authAccount(authAccountsConfig.FindAuthAccount(env))
+		for _, auth := range config.Conf.ListAuthAccountNames() {
+			authAccount(config.Conf.FindAuthAccount(auth))
 		}
 		break
 	case account != "":
-		authAccount(authAccountsConfig.FindAuthAccount(account))
+		authAccount(config.Conf.FindAuthAccount(account))
 		break
 	default:
-		item, err := prompt.Prompt("Select an account", authAccountsConfig.ListAuthAccountNames())
+		item, err := prompt.Prompt("Select an account", config.Conf.ListAuthAccountNames())
 		if err != nil {
 			klog.Fatalf("%s", err)
 		}
 
-		authAccount(authAccountsConfig.FindAuthAccount(item))
+		authAccount(config.Conf.FindAuthAccount(item))
 	}
 }
 
@@ -86,11 +73,11 @@ func authAccount(account *config.AuthAccount) {
 
 	switch account.AuthProvider {
 	case "aws-google-auth":
-		authWithGoogleAuth(authProvidersConfig.FindAuthProvider("aws-google-auth"), account)
+		authWithGoogleAuth(config.Conf.FindAuthProvider("aws-google-auth"), account)
 	case "aws-azure-login":
-		authWithAzureLogin(authProvidersConfig.FindAuthProvider("aws-azure-login"), account)
+		authWithAzureLogin(config.Conf.FindAuthProvider("aws-azure-login"), account)
 	case "aws-sts":
-		authWithAWSSTS(authProvidersConfig.FindAuthProvider("aws-sts"), account)
+		authWithAWSSTS(config.Conf.FindAuthProvider("aws-sts"), account)
 	}
 }
 
@@ -170,7 +157,7 @@ func authWithAWSSTS(provider *config.AuthProvider, account *config.AuthAccount) 
 	var sess *aws.SharedSession
 	var err error
 	if account.DependsOn != "" {
-		auth := authAccountsConfig.FindAuthAccount(account.DependsOn)
+		auth := config.Conf.FindAuthAccount(account.DependsOn)
 
 		fmt.Printf("%v Depends on %s\n", promptui.IconWarn, account.DependsOn)
 
