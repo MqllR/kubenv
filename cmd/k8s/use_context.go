@@ -7,7 +7,6 @@ import (
 	"k8s.io/klog"
 
 	"github.com/mqllr/kubenv/pkg/config"
-	"github.com/mqllr/kubenv/pkg/helper"
 	"github.com/mqllr/kubenv/pkg/k8s"
 	"github.com/mqllr/kubenv/pkg/prompt"
 )
@@ -21,13 +20,6 @@ var UseContextCmd = &cobra.Command{
 	Use:   "use-context",
 	Short: "Switch from k8s context",
 	Args:  cobra.MaximumNArgs(1),
-	PreRun: func(cmd *cobra.Command, args []string) {
-		helper.IsConfigExist(
-			[]string{
-				"kubeconfig",
-			},
-		)
-	},
 	Run: func(cmd *cobra.Command, args []string) {
 		useContext(args)
 	},

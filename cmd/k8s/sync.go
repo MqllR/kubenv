@@ -8,7 +8,6 @@ import (
 	"k8s.io/klog"
 
 	"github.com/mqllr/kubenv/pkg/config"
-	"github.com/mqllr/kubenv/pkg/helper"
 	"github.com/mqllr/kubenv/pkg/k8s"
 )
 
@@ -17,14 +16,6 @@ const k8sConfigFile = "config"
 var SyncCmd = &cobra.Command{
 	Use:   "sync",
 	Short: "Synchronize the kubernetes config files",
-	PreRun: func(cmd *cobra.Command, args []string) {
-		helper.IsConfigExist(
-			[]string{
-				"kubeconfig",
-				"k8sconfigs",
-			},
-		)
-	},
 	Run: func(cmd *cobra.Command, args []string) {
 		sync(args)
 	},

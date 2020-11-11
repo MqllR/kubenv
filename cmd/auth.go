@@ -25,14 +25,6 @@ var (
 var authCmd = &cobra.Command{
 	Use:   "auth",
 	Short: "Authentication related tasks",
-	PreRun: func(cmd *cobra.Command, args []string) {
-		helper.IsConfigExist(
-			[]string{
-				"authProviders",
-				"authAccounts",
-			},
-		)
-	},
 	Run: func(cmd *cobra.Command, args []string) {
 		auth()
 	},
