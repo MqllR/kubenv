@@ -5,7 +5,7 @@
 **kubenv** is a tool to handle different authentication method on AWS and to deal with multiple kubeconfig files. When working on tens of kubernetes clusters and AWS accounts, it becomes useful to have a tool making the glue between each of them.
 
 Features:
-- Wrap tools for AWS authentication when using an indentity federation provider. Currently support: [aws-google-auth](https://github.com/cevoaustralia/aws-google-auth), [aws-azure-login](https://github.com/sportradar/aws-azure-login)
+- Wrap tools for AWS authentication when using a federation with an indentity provider. Currently support: [aws-google-auth](https://github.com/cevoaustralia/aws-google-auth), [aws-azure-login](https://github.com/sportradar/aws-azure-login)
 - Do an AsumeRole using AWS STS with another AWS profile
 - Check the external tools local and remote version
 - Install the external tools. Currently for aws-google-auth and aws-iam-authenticator
