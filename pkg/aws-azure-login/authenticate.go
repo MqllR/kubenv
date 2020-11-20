@@ -3,22 +3,10 @@ package awsazurelogin
 import (
 	"fmt"
 	"os"
+	"os/exec"
 	"strconv"
 
-	"github.com/mqllr/kubenv/pkg/auth"
 	"github.com/mqllr/kubenv/pkg/aws"
-)
-
-// Interface is an injectable interface for running aws-azure-login commands
-type Interface interface {
-	// Authenticate try to authenticate using aws-azure-login
-	Authenticate(auth *AWSAzureLogin) error
-}
-
-const (
-	AWSAzureLoginCmd = "aws-azure-login"
-	npmCmd           = "sudo npm -g"
-	DefaultDuration  = 43200
 )
 
 type AWSAzureLogin struct {
@@ -32,12 +20,23 @@ type AWSAzureLogin struct {
 }
 
 // NewAWSGoogleAuth create an AWSGoogleAuth struct
-func NewAWSAzureLogin(tid string, addid string, username string) *AWSAzureLogin {
+func NewAWSAzureLogin(tenantId string, appIDUri string, userName string, awsProfile string, awsRole string) *AWSAzureLogin {
+
 	return &AWSAzureLogin{
-		TenantID: tid,
-		AppIDUri: addid,
-		UserName: username,
+		TenantID:   tenantId,
+		AppIDUri:   appIDUri,
+		UserName:   userName,
+		AWSProfile: awsProfile,
+		AWSRole:    awsRole,
 	}
+}
+
+func (a *AWSAzureLogin) SetDuration(duration int) {
+	a.Duration = duration
+}
+
+func (a *AWSAzureLogin) SetRemerberMe(remeberMe bool) {
+	a.RemeberMe = remeberMe
 }
 
 // SetDefaults inject default value if not set
@@ -48,7 +47,7 @@ func (a *AWSAzureLogin) SetDefaults() {
 }
 
 // Validate ensure every fields are correctly defined
-func (a *AWSAzureLogin) ConfigureValidate() bool {
+func (a *AWSAzureLogin) Validate() bool {
 	if a.TenantID == "" {
 		return false
 	}
@@ -68,15 +67,7 @@ func (a *AWSAzureLogin) ConfigureValidate() bool {
 	return true
 }
 
-// Authenticate a username with aws-google-a
-func (a *AWSAzureLogin) Configure() error {
-	a.SetDefaults()
-
-	valid := a.ConfigureValidate()
-	if !valid {
-		return fmt.Errorf("Error aws-azure-login profile is invalid")
-	}
-
+func (a *AWSAzureLogin) configure() error {
 	ini, err := aws.NewConfigFile()
 	if err != nil {
 		return err
@@ -98,19 +89,24 @@ func (a *AWSAzureLogin) Configure() error {
 	return nil
 }
 
-func (runner *auth.Runner) Authenticate(a *AWSAzureLogin) error {
+func (a *AWSAzureLogin) Authenticate() error {
+	err := a.configure()
+	if err != nil {
+		return fmt.Errorf("Failed to configure the profile: %s", err)
+	}
+
 	args := []string{
 		"--no-prompt",
 		"--profile",
 		a.AWSProfile,
 	}
 
-	cmd := runner.exec.Command(AWSAzureLoginCmd, args...)
-	cmd.SetStdin(os.Stdin)
-	cmd.SetStdout(os.Stdout)
-	cmd.SetStderr(os.Stderr)
+	cmd := exec.Command(AWSAzureLoginCmd, args...)
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
 
-	err := cmd.Run()
+	err = cmd.Run()
 	if err != nil {
 		return fmt.Errorf("Error when running cmd: %s", err)
 	}

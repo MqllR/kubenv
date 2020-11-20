@@ -4,7 +4,7 @@ type AuthAccount struct {
 	AuthProvider string `yaml:"AuthProvider"`
 	AWSProfile   string `yaml:"AWSProfile,omitempty"`
 	AWSRole      string `yaml:"AWSRole,omitempty"`
-	Region       string `yaml:"Region,omitempty"`
+	AWSRegion    string `yaml:"AWSRegion,omitempty"`
 	DependsOn    string `yaml:"DependsOn,omitempty"`
 	Duration     int    `yaml:"Duration,omitempty"`
 }
