@@ -4,13 +4,8 @@ import (
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/service/sts"
-	"k8s.io/klog"
 
 	"github.com/mqllr/kubenv/pkg/aws"
-)
-
-var (
-	DefaultDuration int64 = 3600
 )
 
 type AssumeRole struct {
@@ -22,27 +17,40 @@ type AssumeRole struct {
 	region          string
 }
 
-func NewAssumeRole(roleArn string,
-	roleSessionName string, session *aws.SharedSession,
-	profile string, region string) *AssumeRole {
+func NewAssumeRole(roleArn string, roleSessionName string,
+	session *aws.SharedSession, profile string) *AssumeRole {
+
 	return &AssumeRole{
 		roleArn:         &roleArn,
 		roleSessionName: &roleSessionName,
 		session:         session,
 		profile:         profile,
-		region:          region,
 	}
+}
+
+func (a *AssumeRole) SetAWSRegion(awsRegion string) {
+	a.region = awsRegion
+}
+
+func (a *AssumeRole) SetDuration(duration *int64) {
+	a.Duration = duration
 }
 
 func (a *AssumeRole) SetDefaults() {
 	if *a.Duration == 0 {
 		a.Duration = &DefaultDuration
 	}
+
+	if a.region == "" {
+		a.region = DefaultAWSRegion
+	}
+}
+
+func (a *AssumeRole) Validate() bool {
+	return true
 }
 
 func (a *AssumeRole) Authenticate() error {
-	a.SetDefaults()
-
 	input := &sts.AssumeRoleInput{
 		DurationSeconds: a.Duration,
 		RoleArn:         a.roleArn,
@@ -59,8 +67,6 @@ func (a *AssumeRole) Authenticate() error {
 		return fmt.Errorf("Error on AssumeRoleInput: %s", err)
 	}
 
-	klog.V(5).Info("Token received: %v", output)
-
 	ini, err := aws.NewConfigFile()
 	if err != nil {
 		return fmt.Errorf("Error on AWS config file: %s", err)
@@ -70,8 +76,6 @@ func (a *AssumeRole) Authenticate() error {
 		"output": "json",
 		"region": a.region,
 	})
-
-	klog.V(2).Infof("Profile %s saved in AWS config file", a.profile)
 
 	if err != nil {
 		return err
@@ -91,8 +95,6 @@ func (a *AssumeRole) Authenticate() error {
 	if err != nil {
 		return err
 	}
-
-	klog.V(2).Infof("Credentials %s saved in AWS credentials file", a.profile)
 
 	return nil
 }

@@ -18,7 +18,7 @@ authAccounts: {}
     AuthProvider: aws-google-auth
     AWSProfile: dev
     AWSRole: arn:aws:iam::121638826155:role/AdminDev
-    Region: eu-central-1
+    AWSRegion: eu-central-1
   test:
     AuthProvider: aws-azure-login
     AWSProfile: test
