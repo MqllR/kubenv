@@ -6,10 +6,9 @@ import (
 	"sort"
 
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 	"k8s.io/klog"
 
-	"github.com/mqllr/kubenv/pkg/helper"
+	"github.com/mqllr/kubenv/pkg/config"
 	"github.com/mqllr/kubenv/pkg/k8s"
 	"github.com/mqllr/kubenv/pkg/prompt"
 )
@@ -18,13 +17,6 @@ var WithContextCmd = &cobra.Command{
 	Use:   "with-context [context] command",
 	Short: "Execute a command with a k8s context",
 	Args:  cobra.RangeArgs(1, 2),
-	PreRun: func(cmd *cobra.Command, args []string) {
-		helper.IsConfigExist(
-			[]string{
-				"kubeconfig",
-			},
-		)
-	},
 	Run: func(cmd *cobra.Command, args []string) {
 		withContext(args)
 	},
@@ -34,7 +26,7 @@ var WithContextCmd = &cobra.Command{
 func withContext(args []string) {
 	var (
 		tempKubeConfig string
-		kubeConfig     = viper.GetString("kubeconfig")
+		kubeConfig     = config.Conf.KubeConfig
 		_              = args[len(args)-1]
 	)
 
@@ -59,7 +51,7 @@ func withContext(args []string) {
 	if err != nil {
 		klog.Fatalf("")
 	}
-	klog.V(2).Info("Original kubeconfig copied to %s", tempKubeConfig)
+	klog.V(2).Infof("Original kubeconfig copied to %s", tempKubeConfig)
 
 	kubeconfig := k8s.NewKubeConfig()
 	if err = kubeconfig.Unmarshal(config); err != nil {
