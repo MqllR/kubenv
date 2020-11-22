@@ -165,3 +165,13 @@ func (kubeConfig *KubeConfig) IsContextExist(context string) bool {
 
 	return true
 }
+
+// SetCurrentContext define the current-context parameter
+func (kubeconfig *KubeConfig) SetCurrentContext(context string) error {
+	if !kubeconfig.IsContextExist(context) {
+		return fmt.Errorf("Context %s doesn't exist in kubeconfig file", context)
+	}
+
+	kubeconfig.CurrentContext = context
+	return nil
+}

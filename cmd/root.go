@@ -49,6 +49,7 @@ func init() {
 	// k8s sub cmd
 	k8sCmd.AddCommand(k8s.SyncCmd)
 	k8sCmd.AddCommand(k8s.UseContextCmd)
+	k8sCmd.AddCommand(k8s.WithContextCmd)
 
 	// dependency sub cmd
 	depCmd.AddCommand(dep.CheckCmd)

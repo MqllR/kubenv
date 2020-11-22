@@ -3,7 +3,9 @@ package k8s
 import (
 	"io/ioutil"
 	"os"
+	"os/exec"
 	"sort"
+	"strings"
 
 	"github.com/spf13/cobra"
 	"k8s.io/klog"
@@ -14,9 +16,9 @@ import (
 )
 
 var WithContextCmd = &cobra.Command{
-	Use:   "with-context [context] command",
+	Use:   "with-context command ...",
 	Short: "Execute a command with a k8s context",
-	Args:  cobra.RangeArgs(1, 2),
+	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		withContext(args)
 	},
@@ -25,15 +27,26 @@ var WithContextCmd = &cobra.Command{
 // with-context command
 func withContext(args []string) {
 	var (
-		tempKubeConfig string
 		kubeConfig     = config.Conf.KubeConfig
-		_              = args[len(args)-1]
+		tempKubeConfig string
 	)
 
-	config, err := ioutil.ReadFile(kubeConfig)
+	klog.V(2).Infof("Read the kubeconfig file from %s", kubeConfig)
+
+	c, err := k8s.NewKubeConfigFromFile(kubeConfig)
+	contexts := c.GetContextNames()
+	sort.Strings(contexts)
+
+	klog.V(5).Infof("List of contexts: %v", contexts)
+
+	selectedContext, err := prompt.Prompt("Select the context to use", contexts)
 	if err != nil {
-		klog.Fatalf("Cannot read kubeconfig file: %s", err)
+		klog.Fatalf("%s", err)
 	}
+
+	c.SetCurrentContext(selectedContext)
+
+	klog.V(2).Info("Create a temporary kubeconfig file")
 
 	temp, err := ioutil.TempFile("/tmp", "kubeconfig-*")
 	if err != nil {
@@ -41,36 +54,32 @@ func withContext(args []string) {
 	}
 
 	tempKubeConfig = temp.Name()
-
 	defer func() {
 		temp.Close()
 		os.Remove(tempKubeConfig)
 	}()
 
-	_, err = temp.Write(config)
+	data, err := c.Marshal()
 	if err != nil {
-		klog.Fatalf("")
-	}
-	klog.V(2).Infof("Original kubeconfig copied to %s", tempKubeConfig)
-
-	kubeconfig := k8s.NewKubeConfig()
-	if err = kubeconfig.Unmarshal(config); err != nil {
-		klog.Fatalf("Cannot unmarshal config: %s", err)
+		klog.Fatalf("Unable to marshal kubeconfig: %s", err)
 	}
 
-	contexts := kubeconfig.GetContextNames()
-
-	var selectedContext string
-
-	sort.Strings(contexts)
-
-	selectedContext, err = prompt.Prompt("Select the context", contexts)
+	_, err = temp.Write(data)
 	if err != nil {
-		klog.Fatalf("%s", err)
+		klog.Fatalf("Error when writting the temporary kubeconfig: %s", err)
 	}
 
-	klog.Info(selectedContext)
+	klog.V(2).Infof("Original kubeconfig copied to %s using context %s", tempKubeConfig, selectedContext)
 
-	//	kubeconfig.CurrentContext = selectedContext
-	//	kubeconfig.WriteFile(kubeConfig)
+	cmd := exec.Command("/bin/sh", "-c", strings.Join(args, " "))
+	cmd.Env = []string{
+		"KUBECONFIG=" + tempKubeConfig,
+	}
+	cmd.Stdin = os.Stdin
+	cmd.Stderr = os.Stderr
+	cmd.Stdout = os.Stdout
+
+	klog.V(2).Infof("Running command %s with environment var KUBECONFIG=%s", strings.Join(args, " "), tempKubeConfig)
+
+	cmd.Run()
 }
