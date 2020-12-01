@@ -71,15 +71,41 @@ func withContext(args []string) {
 
 	klog.V(2).Infof("Original kubeconfig copied to %s using context %s", tempKubeConfig, selectedContext)
 
-	cmd := exec.Command("/bin/sh", "-c", strings.Join(args, " "))
-	cmd.Env = []string{
-		"KUBECONFIG=" + tempKubeConfig,
+	exe, err := exec.LookPath(args[0])
+	if err != nil {
+		klog.Fatal(err)
 	}
-	cmd.Stdin = os.Stdin
-	cmd.Stderr = os.Stderr
-	cmd.Stdout = os.Stdout
 
-	klog.V(2).Infof("Running command %s with environment var KUBECONFIG=%s", strings.Join(args, " "), tempKubeConfig)
+	envs := os.Environ()
+	isExist := func(envs []string, key string) (bool, int) {
+		for i, env := range envs {
+			if env == key {
+				return true, i
+			}
+		}
+
+		return false, 0
+	}
+
+	exist, i := isExist(envs, "KUBECONFIG")
+	localKubeConfig := "KUBECONFIG=" + tempKubeConfig
+	if exist {
+		envs[i] = localKubeConfig
+	} else {
+		envs = append(envs, localKubeConfig)
+	}
+
+	cmd := exec.Cmd{
+		Path:   exe,
+		Args:   args[0:],
+		Env:    envs,
+		Stdin:  os.Stdin,
+		Stdout: os.Stdout,
+		Stderr: os.Stderr,
+	}
+
+	klog.V(2).Infof("Running command: %s", strings.Join(args, " "))
+	klog.V(5).Infof("Running command: %s with environment variable %v", strings.Join(args, " "), envs)
 
 	cmd.Run()
 }
