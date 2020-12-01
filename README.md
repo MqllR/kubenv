@@ -12,6 +12,7 @@ Features:
 - Merge different kubeconfig file in different path into a single big kubeconfig
 - Bind a kubeconfig to an AWS profile
 - Switch between kubernetes context
+- Execute command using a single context
 
 ## Install
 
@@ -69,7 +70,7 @@ The authAccounts declare the differents AWS profile and the authentication metho
 ```yaml
   dev:
     AuthProvider: aws-google-auth
-    AWSProfile: dev 
+    AWSProfile: dev
     AWSRole: arn:aws:iam::121638826155:role/AdminDev
     AWSRegion: eu-central-1
 ```
@@ -93,9 +94,9 @@ The authAccounts declare the differents AWS profile and the authentication metho
     AWSRole: arn:aws:iam::125262463543:role/DoubleJumpTest
     DependsOn: test
  ```
- 
+
  ### k8sConfigs
- 
+
 The k8sConfigs parameter define the path de kubeconfig to sync and optionaly a reference to an authAccount to inject the environment variable AWS_PROFILE into the kubeconfig exec section.
 
 ```yaml
@@ -103,7 +104,7 @@ The k8sConfigs parameter define the path de kubeconfig to sync and optionaly a r
     sync:
       mode: local
       path: /tmp/k8senv/dev/config
-    authAccount: dev 
+    authAccount: dev
 ```
 
 ## Getting started

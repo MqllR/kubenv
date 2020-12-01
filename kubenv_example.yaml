@@ -2,18 +2,18 @@
 kubeConfig: "/home/test/.kube/config" # Optional, default to $HOME/.kube/config
 
 authProviders:
-  aws-google-auth: {}
+  aws-google-auth:
     IDP: "Bzbj37S"
     SP: "91010906235"
     UserName: "my@e.mail"
-  aws-azure-login: {}
+  aws-azure-login:
     TenantID: "Bzbj37S"
     AppIDUri: "91010906235"
     UserName: "my@e.mail"
-  aws-sts: {}
+  aws-sts:
     UserName: "my@e.mail"
 
-authAccounts: {}
+authAccounts:
   dev:
     AuthProvider: aws-google-auth
     AWSProfile: dev
@@ -30,7 +30,7 @@ authAccounts: {}
     AWSRole: arn:aws:iam::125262463543:role/DoubleJumpTest
     DependsOn: test
 
-k8sConfigs: {}
+k8sConfigs:
   dev:
     sync:
       mode: local
