@@ -44,7 +44,10 @@ func withContext(args []string) {
 		klog.Fatalf("%s", err)
 	}
 
-	c.SetCurrentContext(selectedContext)
+	err = c.SetCurrentContext(selectedContext)
+	if err != nil {
+		klog.Fatalf("Cannot set the current context %s: %s", selectedContext, err)
+	}
 
 	klog.V(2).Info("Create a temporary kubeconfig file")
 
