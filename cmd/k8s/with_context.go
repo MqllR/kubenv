@@ -1,7 +1,6 @@
 package k8s
 
 import (
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"sort"
@@ -26,10 +25,7 @@ var WithContextCmd = &cobra.Command{
 
 // with-context command
 func withContext(args []string) {
-	var (
-		kubeConfig     = config.Conf.KubeConfig
-		tempKubeConfig string
-	)
+	kubeConfig := config.Conf.KubeConfig
 
 	klog.V(2).Infof("Read the kubeconfig file from %s", kubeConfig)
 
@@ -50,27 +46,11 @@ func withContext(args []string) {
 	}
 
 	klog.V(2).Info("Create a temporary kubeconfig file")
-
-	temp, err := ioutil.TempFile("/tmp", "kubeconfig-*")
+	tempKubeConfig, err := c.WriteTempFile()
 	if err != nil {
 		klog.Fatalf("Cannot create a temporary file %s", err)
 	}
-
-	tempKubeConfig = temp.Name()
-	defer func() {
-		temp.Close()
-		os.Remove(tempKubeConfig)
-	}()
-
-	data, err := c.Marshal()
-	if err != nil {
-		klog.Fatalf("Unable to marshal kubeconfig: %s", err)
-	}
-
-	_, err = temp.Write(data)
-	if err != nil {
-		klog.Fatalf("Error when writting the temporary kubeconfig: %s", err)
-	}
+	defer os.Remove(tempKubeConfig)
 
 	klog.V(2).Infof("Original kubeconfig copied to %s using context %s", tempKubeConfig, selectedContext)
 

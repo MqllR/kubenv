@@ -125,6 +125,29 @@ func (kubeConfig *KubeConfig) WriteFile(file string) error {
 	return ioutil.WriteFile(file, config, 0644)
 }
 
+// WriteTempFile Marshal KubeConfig in a temporary file
+func (kubeConfig *KubeConfig) WriteTempFile() (string, error) {
+	temp, err := ioutil.TempFile("/tmp", "kubeconfig-*")
+	if err != nil {
+		return "", fmt.Errorf("Cannot create a temporary file %s", err)
+	}
+
+	tempKubeConfig := temp.Name()
+	defer temp.Close()
+
+	data, err := kubeConfig.Marshal()
+	if err != nil {
+		return "", fmt.Errorf("Unable to marshal kubeconfig: %s", err)
+	}
+
+	_, err = temp.Write(data)
+	if err != nil {
+		return "", fmt.Errorf("Error when writting the temporary kubeconfig: %s", err)
+	}
+
+	return tempKubeConfig, nil
+}
+
 // Append each Clusters, Users and Contexts into another KubeConfig
 func (kubeConfig *KubeConfig) Append(config *KubeConfig) {
 	kubeConfig.Clusters = append(kubeConfig.Clusters, config.Clusters...)

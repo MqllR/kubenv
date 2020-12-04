@@ -33,7 +33,6 @@ func init() {
 // use-context command
 func useContext(args []string) {
 	kubeconfig, err := k8s.NewKubeConfigFromFile(config.Conf.KubeConfig)
-
 	if err != nil {
 		klog.Fatalf("Cannot load kubeconfig file: %s", err)
 	}
@@ -60,5 +59,6 @@ func useContext(args []string) {
 	if err != nil {
 		klog.Fatalf("Cannot set the current context %s: %s", selectedContext, err)
 	}
+
 	kubeconfig.WriteFile(config.Conf.KubeConfig)
 }
