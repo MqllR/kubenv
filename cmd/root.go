@@ -41,6 +41,8 @@ func init() {
 	rootCmd.Flags().SortFlags = false
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.kubenv.yaml)")
 
+	rootCmd.AddCommand(versionCmd)
+
 	// root cmd
 	rootCmd.AddCommand(authCmd)
 	rootCmd.AddCommand(k8sCmd)
