@@ -1,6 +1,6 @@
 # kubenv
 
-[![Actions Status](https://github.com/MqllR/kubenv/workflows/Build%20and%20release/badge.svg)](https://github.com/MqllR/kubenv/actions)
+[![Actions Status](https://github.com/MqllR/kubenv/workflows/Publish/badge.svg)](https://github.com/MqllR/kubenv/actions)
 
 **kubenv** is a tool to handle different authentication method on AWS and to deal with multiple kubeconfig files. When working on tens of kubernetes clusters and AWS accounts, it becomes useful to have a tool making the glue between each of them.
 

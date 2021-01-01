@@ -92,7 +92,7 @@ func (a *AWSGoogleAuth) Authenticate() error {
 		a.UserName,
 	}
 
-	if klog.V(5) {
+	if bool(klog.V(5)) {
 		args = append(args, []string{"-l", "debug"}...)
 	}
 
