@@ -80,7 +80,7 @@ func NewKubeConfig() *KubeConfig {
 	}
 }
 
-// NewKubeConfig create a new struct KubeConfig
+// NewKubeConfig create a new struct KubeConfig from a file
 func NewKubeConfigFromFile(kubeconfig string) (*KubeConfig, error) {
 	if _, err := os.Stat(kubeconfig); os.IsNotExist(err) {
 		return nil, fmt.Errorf("File doesn't exist: %s", err)
