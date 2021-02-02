@@ -2,6 +2,8 @@ package cmd
 
 import (
 	"fmt"
+	"io"
+	"os"
 
 	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
@@ -15,10 +17,10 @@ var versionCmd = &cobra.Command{
 	Use:   "version",
 	Short: "Print the CLI version",
 	Run: func(cmd *cobra.Command, args []string) {
-		version()
+		version(io.Writer(os.Stdout))
 	},
 }
 
-func version() {
-	fmt.Printf("%v kubenv v%s\n", promptui.IconGood, Version)
+func version(w io.Writer) {
+	fmt.Fprintf(w, "%v kubenv v%s\n", promptui.IconGood, Version)
 }
