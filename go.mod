@@ -3,22 +3,24 @@ module github.com/mqllr/kubenv
 go 1.15
 
 require (
-	github.com/aws/aws-sdk-go v1.30.9
+	github.com/aws/aws-sdk-go v1.37.1
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
 	github.com/lunixbochs/vtclean v1.0.0 // indirect
-	github.com/manifoldco/promptui v0.7.0
-	github.com/mattn/go-colorable v0.1.6 // indirect
-	github.com/mitchellh/mapstructure v1.2.2 // indirect
-	github.com/pelletier/go-toml v1.7.0 // indirect
+	github.com/magiconair/properties v1.8.4 // indirect
+	github.com/manifoldco/promptui v0.8.0
+	github.com/mattn/go-colorable v0.1.8 // indirect
+	github.com/mitchellh/mapstructure v1.4.1 // indirect
+	github.com/pelletier/go-toml v1.8.1 // indirect
+	github.com/spf13/afero v1.5.1 // indirect
 	github.com/spf13/cast v1.3.1 // indirect
-	github.com/spf13/cobra v1.0.0
+	github.com/spf13/cobra v1.1.1
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
-	github.com/spf13/pflag v1.0.5 // indirect
-	github.com/spf13/viper v1.6.3
-	golang.org/x/sys v0.0.0-20200409092240-59c9f1ba88fa // indirect
-	golang.org/x/text v0.3.2 // indirect
-	gopkg.in/ini.v1 v1.55.0
-	gopkg.in/yaml.v2 v2.2.8
+	github.com/spf13/viper v1.7.1
+	github.com/stretchr/testify v1.5.1 // indirect
+	golang.org/x/sys v0.0.0-20210124154548-22da62e12c0c // indirect
+	golang.org/x/text v0.3.5 // indirect
+	gopkg.in/ini.v1 v1.62.0
+	gopkg.in/yaml.v2 v2.4.0
 	k8s.io/klog v1.0.0
 	k8s.io/utils v0.0.0-20200411171748-3d5a2fe318e4
 )
