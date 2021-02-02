@@ -35,9 +35,15 @@ k8sConfigs:
     sync:
       mode: local
       path: /tmp/k8senv/dev/config
-    authAccount: dev
   test:
     sync:
       mode: local
       path: /tmp/k8senv/test/config
-    authAccount: doublejump
+  kind:
+    sync:
+      mode: exec
+      command:
+        - bash
+        - -c
+        - |
+          kind export -q kubeconfig --kubeconfig /tmp/test && cat /tmp/test

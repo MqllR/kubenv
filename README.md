@@ -10,7 +10,6 @@ Features:
 - Check the external tools local and remote version
 - Install the external tools. Currently for aws-google-auth and aws-iam-authenticator
 - Merge different kubeconfig file in different path into a single big kubeconfig
-- Bind a kubeconfig to an AWS profile
 - Switch between kubernetes context
 - Execute command using a single context
 
@@ -23,7 +22,7 @@ go build
 mv kubenv /usr/local/bin/
 ```
 
-Define your configuration file as [kubenv-example.yaml](https://github.com/MqllR/kubenv/blob/master/kubenv_example.yaml) and export the environment variable:
+Define your configuration file as [kubenv-example.yaml](https://github.com/MqllR/kubenv/blob/master/example/kubenv_example.yaml) and export the environment variable:
 
 ```
 export KUBENV_CONFIG=/path/to/my/config.yaml
@@ -97,14 +96,21 @@ The authAccounts declare the differents AWS profile and the authentication metho
 
  ### k8sConfigs
 
-The k8sConfigs parameter define the path de kubeconfig to sync and optionaly a reference to an authAccount to inject the environment variable AWS_PROFILE into the kubeconfig exec section.
+The k8sConfigs parameter define the sync mode. 2 modes available: `local` for local files and `exec` for command execution. The exec mode will capture the command output.
 
 ```yaml
   dev:
     sync:
       mode: local
       path: /tmp/k8senv/dev/config
-    authAccount: dev
+  kind:
+    sync:
+      mode: exec
+      command:
+        - bash
+        - -c
+        - |
+          kind export -q kubeconfig --kubeconfig /tmp/test && cat /tmp/test
 ```
 
 ## Getting started

@@ -33,10 +33,16 @@ func sync(args []string) {
 		if err != nil {
 			fmt.Printf(" %v\n", promptui.IconBad)
 			klog.V(2).Infof("Cannot sync: %s", err)
+			continue
 		}
 
-		s.AppendKubeConfig(fullConfig)
-		fmt.Printf(" %v\n", promptui.IconGood)
+		err = s.AppendKubeConfig(fullConfig)
+		if err != nil {
+			fmt.Printf(" %v\n", promptui.IconBad)
+			klog.V(2).Infof("Error when getting the config back: %s", err)
+		} else {
+			fmt.Printf(" %v\n", promptui.IconGood)
+		}
 	}
 
 	fullConfig.WriteFile(config.Conf.KubeConfig)

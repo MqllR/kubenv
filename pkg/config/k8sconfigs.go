@@ -6,8 +6,9 @@ type K8SConfig struct {
 }
 
 type K8SSync struct {
-	Mode string `yaml:"mode"`
-	Path string `yaml:"path,omitempty"`
+	Mode    string   `yaml:"mode"`
+	Path    string   `yaml:"path,omitempty"`
+	Command []string `yaml:"command,omitempty"`
 }
 
 /*

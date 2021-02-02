@@ -25,7 +25,7 @@ func NewSyncService(conf config.K8SSync) (*SyncService, error) {
 	case "local":
 		sync.s = NewLocalFile(conf.Path)
 	case "exec":
-		sync.s = NewCommandExec()
+		sync.s = NewCommandExec(conf.Command)
 	default:
 		return nil, fmt.Errorf("Sync mode not implemented")
 	}
