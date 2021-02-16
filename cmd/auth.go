@@ -13,7 +13,6 @@ import (
 	awsgoogleauth "github.com/mqllr/kubenv/pkg/aws-google-auth"
 	awssts "github.com/mqllr/kubenv/pkg/aws-sts"
 	"github.com/mqllr/kubenv/pkg/config"
-	"github.com/mqllr/kubenv/pkg/helper"
 	"github.com/mqllr/kubenv/pkg/prompt"
 )
 
@@ -58,7 +57,12 @@ func auth() {
 func authAccount(account *config.AuthAccount) {
 	fmt.Printf("%v Authentication using %s...\n", promptui.IconSelect, account.AuthProvider)
 
-	if !helper.IsExpired(account) {
+	session, err := aws.NewSharedSession(account.AWSProfile)
+	if err != nil {
+		klog.Errorf("Cannot create a shared session: %s", err)
+	}
+
+	if !session.IsExpired() {
 		fmt.Printf("%v Token already active. Skipping.\n", promptui.IconGood)
 		return
 	}
@@ -100,7 +104,7 @@ func authWithGoogleAuth(provider *config.AuthProvider, account *config.AuthAccou
 	klog.V(2).Infof("Authenticate using aws-google-auth AWSRole: %s", awsRole)
 	klog.V(2).Infof("Authenticate using aws-google-auth AWSProfile: %s", awsProfile)
 	klog.V(2).Infof("Authenticate using aws-google-auth Region: %s", a.AWSRegion)
-	klog.V(2).Infof("Authenticate using aws-azure-login Duration: %d", a.Duration)
+	klog.V(2).Infof("Authenticate using aws-google-auth Duration: %d", a.Duration)
 
 	return a
 }
