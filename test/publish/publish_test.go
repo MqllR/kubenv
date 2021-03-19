@@ -20,7 +20,7 @@ func TestPublished(t *testing.T) {
 
 	output, err := cmd.CombinedOutput()
 	if err != nil {
-		t.Fatalf("Error when running version command: %s", err)
+		t.Fatalf("Error when running version command: %s. Output %s", err, output)
 	}
 
 	version := &struct {

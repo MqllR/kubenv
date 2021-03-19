@@ -24,6 +24,9 @@ jobs:
     - name: Build
       run: make build
 
+    - name: debug
+      run: ls -la
+
     - name: Publish test
       run: make publish_test
 
