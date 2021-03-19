@@ -5,6 +5,7 @@ build:
 		GOOS=linux GOARCH=amd64 go build -o $(BINARY)-linux-amd64
 		GOOS=darwin GOARCH=amd64 go build -o $(BINARY)-darwin-amd64
 
+
 .PONY: publish_test
 publish_test:
-	go test ./.../publish
+	KUBENV_CONFIG=${PWD}/example/kubenv_example.yaml go test ./.../publish

@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"os"
 	"os/exec"
+	"regexp"
 	"testing"
 )
 
@@ -19,7 +20,7 @@ func TestPublished(t *testing.T) {
 
 	output, err := cmd.CombinedOutput()
 	if err != nil {
-		t.Fatalf("Error when running version command: %s", err)
+		t.Fatalf("Error when running version command: %s. Output %s", err, output)
 	}
 
 	version := &struct {
@@ -31,9 +32,15 @@ func TestPublished(t *testing.T) {
 		t.Fatalf("Cannot unmarshal json output: %s", err)
 	}
 
-	tag := os.Getenv("TAG_REF")
+	tag := os.Getenv("GITHUB_REF")
 	if tag == "" {
-		t.Fatal("Missing TAG_REF env variable")
+		t.Fatal("Missing GITHUB_REF env variable")
+	}
+
+	re := regexp.MustCompile(`(\d+(\.\d+){1,2})$`)
+	tag = re.FindString(tag)
+	if tag == "" {
+		t.Fatal("GITHUB_REF mismatch with regex")
 	}
 
 	if version.V != tag {

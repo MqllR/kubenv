@@ -26,8 +26,6 @@ jobs:
 
     - name: Publish test
       run: make publish_test
-      env:
-        TAG_REF: ${{ github.ref }}
 
     - name: Upload binaries to release
       uses: svenstaro/upload-release-action@v2
