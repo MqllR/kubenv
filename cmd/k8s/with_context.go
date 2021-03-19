@@ -15,9 +15,10 @@ import (
 )
 
 var WithContextCmd = &cobra.Command{
-	Use:   "with-context command ...",
-	Short: "Execute a command with a k8s context",
-	Args:  cobra.MinimumNArgs(1),
+	Aliases: []string{"wc"},
+	Use:     "with-context command ...",
+	Short:   "Execute a command with a k8s context",
+	Args:    cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		withContext(args)
 	},
