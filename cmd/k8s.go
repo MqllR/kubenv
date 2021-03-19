@@ -5,6 +5,7 @@ import (
 )
 
 var k8sCmd = &cobra.Command{
-	Use:   "k8s",
-	Short: "Kubernetes related commands",
+	Aliases: []string{"k"},
+	Use:     "k8s",
+	Short:   "Kubernetes related commands",
 }

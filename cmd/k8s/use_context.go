@@ -11,15 +11,12 @@ import (
 	"github.com/mqllr/kubenv/pkg/prompt"
 )
 
-var (
-	context   string
-	autoLogin bool
-)
+var context string
 
 var UseContextCmd = &cobra.Command{
-	Use:   "use-context",
-	Short: "Switch from k8s context",
-	Args:  cobra.MaximumNArgs(1),
+	Aliases: []string{"uc"},
+	Use:     "use-context",
+	Short:   "Switch to k8s context",
 	Run: func(cmd *cobra.Command, args []string) {
 		useContext(args)
 	},
@@ -27,7 +24,6 @@ var UseContextCmd = &cobra.Command{
 
 func init() {
 	UseContextCmd.Flags().StringVarP(&context, "context", "c", "", "Kubernetes context to switch")
-	UseContextCmd.Flags().BoolVarP(&autoLogin, "auto-login", "a", true, "Auto-login if authAccount is set")
 }
 
 // use-context command
