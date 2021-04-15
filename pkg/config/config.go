@@ -13,10 +13,8 @@ var (
 )
 
 type Config struct {
-	KubeConfig    string                   `yaml:"kubeConfig"`
-	K8SConfigs    map[string]*K8SConfig    `mapstructure:"k8sConfigs"`
-	AuthProviders map[string]*AuthProvider `mapstructure:"authProviders"`
-	AuthAccounts  map[string]*AuthAccount  `mapstructure:"authAccounts"`
+	KubeConfig string                `yaml:"kubeConfig"`
+	K8SConfigs map[string]*K8SConfig `mapstructure:"k8sConfigs"`
 }
 
 func LoadConfig() error {
@@ -37,23 +35,6 @@ func LoadConfig() error {
 	return nil
 }
 
-func (c *Config) FindAuthAccount(account string) *AuthAccount {
-	if acc, ok := c.AuthAccounts[account]; ok {
-		return acc
-	}
-
-	return &AuthAccount{}
-}
-
-func (c *Config) ListAuthAccountNames() []string {
-	var accounts []string
-	for account := range c.AuthAccounts {
-		accounts = append(accounts, account)
-	}
-
-	return accounts
-}
-
 func (c *Config) FindK8SConfig(config string) *K8SConfig {
 	if conf, ok := c.K8SConfigs[config]; ok {
 		return conf
@@ -69,12 +50,4 @@ func (c *Config) ListK8SConfigsNames() []string {
 	}
 
 	return configs
-}
-
-func (c *Config) FindAuthProvider(provider string) *AuthProvider {
-	if acc, ok := c.AuthProviders[provider]; ok {
-		return acc
-	}
-
-	return &AuthProvider{}
 }

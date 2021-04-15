@@ -8,7 +8,6 @@ import (
 	"github.com/spf13/viper"
 	"k8s.io/klog"
 
-	"github.com/mqllr/kubenv/cmd/dep"
 	"github.com/mqllr/kubenv/cmd/k8s"
 	"github.com/mqllr/kubenv/pkg/config"
 )
@@ -20,7 +19,7 @@ var (
 
 	rootCmd = &cobra.Command{
 		Use:   "kubenv",
-		Short: "A tool to manage authentication on Kube",
+		Short: "A tool to manage multiple Kube cluster",
 	}
 )
 
@@ -44,18 +43,12 @@ func init() {
 	rootCmd.AddCommand(versionCmd)
 
 	// root cmd
-	rootCmd.AddCommand(authCmd)
 	rootCmd.AddCommand(k8sCmd)
-	rootCmd.AddCommand(depCmd)
 
 	// k8s sub cmd
 	k8sCmd.AddCommand(k8s.SyncCmd)
 	k8sCmd.AddCommand(k8s.UseContextCmd)
 	k8sCmd.AddCommand(k8s.WithContextCmd)
-
-	// dependency sub cmd
-	depCmd.AddCommand(dep.CheckCmd)
-	depCmd.AddCommand(dep.InstallCmd)
 }
 
 func initConfig() {
