@@ -1,4 +1,4 @@
-package k8s
+package cmd
 
 import (
 	"sort"
@@ -13,7 +13,7 @@ import (
 
 var context string
 
-var UseContextCmd = &cobra.Command{
+var useContextCmd = &cobra.Command{
 	Aliases: []string{"uc"},
 	Use:     "use-context",
 	Short:   "Switch to k8s context",
@@ -23,7 +23,7 @@ var UseContextCmd = &cobra.Command{
 }
 
 func init() {
-	UseContextCmd.Flags().StringVarP(&context, "context", "c", "", "Kubernetes context to switch")
+	useContextCmd.Flags().StringVarP(&context, "context", "c", "", "Kubernetes context to switch")
 }
 
 // use-context command
