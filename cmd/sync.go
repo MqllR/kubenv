@@ -12,8 +12,6 @@ import (
 	k8ssync "github.com/mqllr/kubenv/pkg/k8s/sync"
 )
 
-const k8sConfigFile = "config"
-
 var syncCmd = &cobra.Command{
 	Use:   "sync",
 	Short: "Synchronize the kubernetes config files",
@@ -29,6 +27,7 @@ func sync(args []string) {
 
 	for name, conf := range config.Conf.K8SConfigs {
 		fmt.Printf("Sync kubeconfig %s", name)
+
 		s, err := k8ssync.NewSyncService(*conf.Sync)
 		if err != nil {
 			fmt.Printf(" %v\n", promptui.IconBad)
@@ -45,5 +44,8 @@ func sync(args []string) {
 		}
 	}
 
-	fullConfig.WriteFile(config.Conf.KubeConfig)
+	err := fullConfig.WriteFile(config.Conf.KubeConfig)
+	if err != nil {
+		fmt.Printf("%v Failed to write the kubeconfig file: %s", promptui.IconBad, err)
+	}
 }
