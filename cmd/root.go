@@ -8,7 +8,6 @@ import (
 	"github.com/spf13/viper"
 	"k8s.io/klog"
 
-	"github.com/mqllr/kubenv/cmd/k8s"
 	"github.com/mqllr/kubenv/pkg/config"
 )
 
@@ -43,12 +42,9 @@ func init() {
 	rootCmd.AddCommand(versionCmd)
 
 	// root cmd
-	rootCmd.AddCommand(k8sCmd)
-
-	// k8s sub cmd
-	k8sCmd.AddCommand(k8s.SyncCmd)
-	k8sCmd.AddCommand(k8s.UseContextCmd)
-	k8sCmd.AddCommand(k8s.WithContextCmd)
+	rootCmd.AddCommand(syncCmd)
+	rootCmd.AddCommand(useContextCmd)
+	rootCmd.AddCommand(syncCmd)
 }
 
 func initConfig() {
@@ -62,7 +58,7 @@ func initConfig() {
 	} else {
 		viper.SetConfigName("kubenv")
 		viper.SetConfigType("yaml")
-		viper.AddConfigPath("$HOME")
+		viper.AddConfigPath("$HOME/")
 		viper.AddConfigPath(".")
 	}
 

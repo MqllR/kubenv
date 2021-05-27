@@ -1,4 +1,4 @@
-package k8s
+package cmd
 
 import (
 	"fmt"
@@ -14,7 +14,7 @@ import (
 
 const k8sConfigFile = "config"
 
-var SyncCmd = &cobra.Command{
+var syncCmd = &cobra.Command{
 	Use:   "sync",
 	Short: "Synchronize the kubernetes config files",
 	Run: func(cmd *cobra.Command, args []string) {

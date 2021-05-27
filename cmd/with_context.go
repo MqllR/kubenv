@@ -1,4 +1,4 @@
-package k8s
+package cmd
 
 import (
 	"os"
@@ -14,7 +14,7 @@ import (
 	"github.com/mqllr/kubenv/pkg/prompt"
 )
 
-var WithContextCmd = &cobra.Command{
+var withContextCmd = &cobra.Command{
 	Aliases: []string{"wc"},
 	Use:     "with-context command ...",
 	Short:   "Execute a command with a k8s context",
