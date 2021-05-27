@@ -58,7 +58,7 @@ func initConfig() {
 	} else {
 		viper.SetConfigName("kubenv")
 		viper.SetConfigType("yaml")
-		viper.AddConfigPath("$HOME")
+		viper.AddConfigPath("$HOME/")
 		viper.AddConfigPath(".")
 	}
 
