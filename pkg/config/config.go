@@ -8,15 +8,20 @@ import (
 )
 
 var (
+	// Conf store the full config. It can be used to access
+	// to any configuration information after calling LoadConfig()
 	Conf   *Config
 	confMu = &sync.Mutex{}
 )
 
+// Config global config description
 type Config struct {
 	KubeConfig string                `yaml:"kubeConfig"`
 	K8SConfigs map[string]*K8SConfig `mapstructure:"k8sConfigs"`
 }
 
+// LoadConfig should be call first to load the configuration. It stores
+// the configuration in Conf.
 func LoadConfig() error {
 	confMu.Lock()
 	defer confMu.Unlock()
@@ -33,21 +38,4 @@ func LoadConfig() error {
 	}
 
 	return nil
-}
-
-func (c *Config) FindK8SConfig(config string) *K8SConfig {
-	if conf, ok := c.K8SConfigs[config]; ok {
-		return conf
-	}
-
-	return &K8SConfig{}
-}
-
-func (c *Config) ListK8SConfigsNames() []string {
-	var configs []string
-	for config := range c.K8SConfigs {
-		configs = append(configs, config)
-	}
-
-	return configs
 }

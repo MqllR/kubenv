@@ -39,7 +39,7 @@ func init() {
 	rootCmd.Flags().SortFlags = false
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.kubenv.yaml)")
 
-	rootCmd.AddCommand(versionCmd)
+	rootCmd.AddCommand(NewVersionCmd())
 
 	// root cmd
 	rootCmd.AddCommand(syncCmd)
