@@ -1,5 +1,6 @@
 ## K8S
 
-- [ ] Run the sync command on a single k8sConfigs
-- [ ] Switch from namespace
-- [ ] Run command across mutliple cluster
+- [ ] Backup / restore kubeconfig when running the sync command
+- [ ] Switch between namespaces
+- [ ] Run command across mutliple clusters
+- [ ] Read the kubenv config through http(s)

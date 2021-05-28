@@ -3,40 +3,38 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
-	"io"
-	"os"
 
 	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
 )
 
 const (
-	Version = "0.1.2"
+	version = "0.1.2"
 )
 
 var output string
 
-var versionCmd = &cobra.Command{
-	Use:   "version",
-	Short: "Print the CLI version",
-	Run: func(cmd *cobra.Command, args []string) {
-		version(io.Writer(os.Stdout))
-	},
-	Aliases: []string{"v"},
-}
-
-func init() {
-	versionCmd.Flags().StringVarP(&output, "output", "o", "", "Output: json")
-}
-
-func version(w io.Writer) {
-	switch output {
-	case "json":
-		v, _ := json.Marshal(map[string]string{"version": Version})
-		fmt.Fprintf(w, string(v))
-	case "":
-		fmt.Fprintf(w, "%v kubenv v%s\n", promptui.IconGood, Version)
-	default:
-		fmt.Fprintf(w, "Unknown output")
+// NewVersionCmd cobra command for version
+func NewVersionCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "version",
+		Short: "Print the CLI version",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			switch output {
+			case "json":
+				v, _ := json.Marshal(map[string]string{"version": version})
+				fmt.Fprintf(cmd.OutOrStdout(), string(v))
+			case "":
+				fmt.Fprintf(cmd.OutOrStdout(), "%v kubenv v%s\n", promptui.IconGood, version)
+			default:
+				fmt.Fprintf(cmd.OutOrStdout(), "Unknown output")
+			}
+			return nil
+		},
+		Aliases: []string{"v"},
 	}
+
+	cmd.Flags().StringVarP(&output, "output", "o", "", "Output: json")
+
+	return cmd
 }
