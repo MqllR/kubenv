@@ -44,6 +44,7 @@ func init() {
 	// root cmd
 	rootCmd.AddCommand(syncCmd)
 	rootCmd.AddCommand(useContextCmd)
+	rootCmd.AddCommand(withContextCmd)
 }
 
 func initConfig() {
