@@ -7,17 +7,22 @@ import (
 	"github.com/mqllr/kubenv/pkg/k8s"
 )
 
+// Sync implements a way to pick up a kubeconfig
 type Sync interface {
 	GetKubeConfig() (*k8s.KubeConfig, error)
 }
 
-type SyncService struct {
+// Service represents the required information to
+// pick a kubeconfig according to the config
+type Service struct {
 	s      Sync
 	config config.K8SSync
 }
 
-func NewSyncService(conf config.K8SSync) (*SyncService, error) {
-	sync := &SyncService{
+// NewService creates a SyncService according to the
+// sync type
+func NewService(conf config.K8SSync) (*Service, error) {
+	sync := &Service{
 		config: conf,
 	}
 
@@ -33,8 +38,9 @@ func NewSyncService(conf config.K8SSync) (*SyncService, error) {
 	return sync, nil
 }
 
-// AppendKubeConfig merge 2 kubeConfig file in 1
-func (s *SyncService) AppendKubeConfig(kubeConfig *k8s.KubeConfig) error {
+// AppendKubeConfig merges the kubeconfig synchronised into the
+// kubeConfig in argument
+func (s *Service) AppendKubeConfig(kubeConfig *k8s.KubeConfig) error {
 	k, err := s.s.GetKubeConfig()
 	if err != nil {
 		return fmt.Errorf("Cannot get the kubeconfig: %s", err)
