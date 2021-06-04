@@ -8,59 +8,7 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-// Cluster ...
-type ClusterWithName struct {
-	Cluster *Cluster `yaml:"cluster"`
-	Name    string   `yaml:"name"`
-}
-
-type Cluster struct {
-	CertificatAuthorityData string `yaml:"certificate-authority-data"`
-	Server                  string `yaml:"server"`
-}
-
-// Context ...
-type ContextWithName struct {
-	Context *Context `yaml:"context"`
-	Name    string   `yaml:"name"`
-}
-
-type Context struct {
-	Cluster   string `yaml:"cluster"`
-	Namespace string `yaml:"namespace,omitempty"`
-	User      string `yaml:"user"`
-}
-
-// User ...
-type UserWithName struct {
-	User *User  `yaml:"user"`
-	Name string `yaml:"name"`
-}
-
-type User struct {
-	ClientCertificateData string `yaml:"client-certificate-data,omitempty"`
-	ClientKeyData         string `yaml:"client-key-data,omitempty"`
-	Username              string `yaml:"username,omitempty"`
-	Password              string `yaml:"password,omitempty"`
-	Exec                  *Exec  `yaml:"exec,omitempty"`
-	Token                 string `yaml:"token,omitempty"`
-}
-
-// Exec ...
-type Exec struct {
-	APIVersion string   `yaml:"apiVersion"`
-	Args       []string `yaml:"args"`
-	Command    string   `yaml:"command"`
-	Env        []*Env   `yaml:"env"`
-}
-
-// Env ...
-type Env struct {
-	Name  string `yaml:"name"`
-	Value string `yaml:"value"`
-}
-
-// KubeConfig represent a kubernetes client configuration
+// KubeConfig represents a kubernetes client configuration
 type KubeConfig struct {
 	APIVersion     string                 `yaml:"apiVersion"`
 	Clusters       []*ClusterWithName     `yaml:"clusters"`
@@ -71,7 +19,7 @@ type KubeConfig struct {
 	Users          []*UserWithName        `yaml:"users"`
 }
 
-// NewKubeConfig create a new struct KubeConfig
+// NewKubeConfig creates a new struct KubeConfig
 func NewKubeConfig() *KubeConfig {
 	return &KubeConfig{
 		APIVersion:  "v1", // Initiale values
@@ -80,7 +28,7 @@ func NewKubeConfig() *KubeConfig {
 	}
 }
 
-// NewKubeConfig create a new struct KubeConfig from a file
+// NewKubeConfigFromFile creates a new struct KubeConfig from a file
 func NewKubeConfigFromFile(kubeconfig string) (*KubeConfig, error) {
 	if _, err := os.Stat(kubeconfig); os.IsNotExist(err) {
 		return nil, fmt.Errorf("File doesn't exist: %s", err)
@@ -100,7 +48,7 @@ func NewKubeConfigFromFile(kubeconfig string) (*KubeConfig, error) {
 	return k, nil
 }
 
-// Unmarshal fill a kubeConfig struct with yaml.Unmarshal
+// Unmarshal fills a kubeConfig struct with yaml.Unmarshal
 func (kubeConfig *KubeConfig) Unmarshal(config []byte) error {
 	err := yaml.Unmarshal(config, kubeConfig)
 	if err != nil {
@@ -110,12 +58,12 @@ func (kubeConfig *KubeConfig) Unmarshal(config []byte) error {
 	return nil
 }
 
-// Marshal convert to []byte a KubeConfig
+// Marshal converts to []byte a KubeConfig
 func (kubeConfig *KubeConfig) Marshal() ([]byte, error) {
 	return yaml.Marshal(&kubeConfig)
 }
 
-// WriteFile Marshal KubeConfig in a file
+// WriteFile writes the kubeconfig in the given file
 func (kubeConfig *KubeConfig) WriteFile(file string) error {
 	config, err := kubeConfig.Marshal()
 	if err != nil {
@@ -125,7 +73,8 @@ func (kubeConfig *KubeConfig) WriteFile(file string) error {
 	return ioutil.WriteFile(file, config, 0644)
 }
 
-// WriteTempFile Marshal KubeConfig in a temporary file
+// WriteTempFile writes the kubeconfig in a temporary file
+// returns the temporary file path
 func (kubeConfig *KubeConfig) WriteTempFile() (string, error) {
 	temp, err := ioutil.TempFile("/tmp", "kubeconfig-*")
 	if err != nil {
@@ -148,14 +97,14 @@ func (kubeConfig *KubeConfig) WriteTempFile() (string, error) {
 	return tempKubeConfig, nil
 }
 
-// Append each Clusters, Users and Contexts into another KubeConfig
+// Append merges 2 KubeConfig struct in one.
 func (kubeConfig *KubeConfig) Append(config *KubeConfig) {
 	kubeConfig.Clusters = append(kubeConfig.Clusters, config.Clusters...)
 	kubeConfig.Contexts = append(kubeConfig.Contexts, config.Contexts...)
 	kubeConfig.Users = append(kubeConfig.Users, config.Users...)
 }
 
-// GetContextNames returns all context names
+// GetContextNames returns a list of all the context names
 func (kubeConfig *KubeConfig) GetContextNames() []string {
 	var contexts []string
 	for _, context := range kubeConfig.Contexts {
@@ -165,13 +114,13 @@ func (kubeConfig *KubeConfig) GetContextNames() []string {
 	return contexts
 }
 
-// ToString convert a KubeConfig in a string
+// ToString converts a KubeConfig in a string
 func (kubeConfig *KubeConfig) ToString() (string, error) {
 	config, err := kubeConfig.Marshal()
 	return string(config), err
 }
 
-// ToString convert a KubeConfig in a string
+// IsContextExist checks if a given context exist in the KubeConfig
 func (kubeConfig *KubeConfig) IsContextExist(context string) bool {
 	exist := func(slice []string, item string) bool {
 		for _, s := range slice {
@@ -189,12 +138,12 @@ func (kubeConfig *KubeConfig) IsContextExist(context string) bool {
 	return true
 }
 
-// SetCurrentContext define the current-context parameter
-func (kubeconfig *KubeConfig) SetCurrentContext(context string) error {
-	if !kubeconfig.IsContextExist(context) {
+// SetCurrentContext just set the given context to CurrentContext
+func (kubeConfig *KubeConfig) SetCurrentContext(context string) error {
+	if !kubeConfig.IsContextExist(context) {
 		return fmt.Errorf("Context %s doesn't exist in kubeconfig file", context)
 	}
 
-	kubeconfig.CurrentContext = context
+	kubeConfig.CurrentContext = context
 	return nil
 }

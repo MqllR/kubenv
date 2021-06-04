@@ -6,8 +6,11 @@ build:
 		GOOS=linux GOARCH=amd64 go build -o $(BINARY)-linux-amd64
 		GOOS=darwin GOARCH=amd64 go build -o $(BINARY)-darwin-amd64
 
-test: install_deps
+test: install_deps lint
 	go test -v ./...
+
+lint:
+	golint ./...
 
 install_deps:
 	go get -v ./...
