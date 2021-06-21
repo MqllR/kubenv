@@ -2,9 +2,10 @@
 name: golangci-lint
 on:
   push:
+    tags:
+      - '*'
     branches:
       - main
-  tags:
   pull_request:
 jobs:
   golangci:
