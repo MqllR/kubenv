@@ -11,6 +11,8 @@ import (
 const releaseVersionRe = `\d+(\.\d+){2}`
 
 func TestVersionOutput(t *testing.T) {
+	os.Setenv("KUBENV_CONFIG", os.Getenv("PWD")+"/../example/kubenv_example.yaml")
+
 	options := []struct {
 		arg   string
 		regex string
