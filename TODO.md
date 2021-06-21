@@ -11,4 +11,4 @@
 
 ## Prompt
 
-- [ ] Migrate on https://github.com/AlecAivazis/survey for multi select
+- [ ] Migrate to https://github.com/AlecAivazis/survey for multi select
