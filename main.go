@@ -2,8 +2,11 @@ package main
 
 import (
 	"github.com/mqllr/kubenv/cmd"
+	"k8s.io/klog"
 )
 
 func main() {
-	cmd.Execute()
+	if err := cmd.Execute(); err != nil {
+		klog.Fatal(err)
+	}
 }

@@ -11,12 +11,15 @@ type CommandExec struct {
 	cmd []string
 }
 
+// NewCommandExec just creates a CommandExec
 func NewCommandExec(cmd []string) *CommandExec {
 	return &CommandExec{
 		cmd: cmd,
 	}
 }
 
+// GetKubeConfig executes the command
+// returns a KubeConfig
 func (cmd *CommandExec) GetKubeConfig() (*k8s.KubeConfig, error) {
 	com := exec.Command(cmd.cmd[0], cmd.cmd[1:]...)
 

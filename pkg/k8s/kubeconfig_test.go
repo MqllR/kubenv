@@ -45,7 +45,10 @@ func TestNewKubeConfig(t *testing.T) {
 
 func TestUnmarshal(t *testing.T) {
 	kubeconfig := NewKubeConfig()
-	kubeconfig.Unmarshal([]byte(testingConfig))
+	err := kubeconfig.Unmarshal([]byte(testingConfig))
+	if err != nil {
+		t.Errorf("Error when trying to unmarsh the test config: %s", err)
+	}
 
 	if len(kubeconfig.Clusters) != 1 {
 		t.Errorf("Excepted array length of clusters %d but got %d", 1, len(kubeconfig.Clusters))

@@ -31,6 +31,9 @@ func withContext(args []string) {
 	klog.V(2).Infof("Read the kubeconfig file from %s", kubeConfig)
 
 	c, err := k8s.NewKubeConfigFromFile(kubeConfig)
+	if err != nil {
+		klog.Fatalf("Error when loading kubeconfig file: %s", err)
+	}
 	contexts := c.GetContextNames()
 	sort.Strings(contexts)
 
@@ -91,5 +94,8 @@ func withContext(args []string) {
 	klog.V(2).Infof("Running command: %s", strings.Join(args, " "))
 	klog.V(5).Infof("Running command: %s with environment variable %v", strings.Join(args, " "), envs)
 
-	cmd.Run()
+	err = cmd.Run()
+	if err != nil {
+		klog.Fatalf("Error when running command: %s", err)
+	}
 }

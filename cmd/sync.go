@@ -9,7 +9,7 @@ import (
 
 	"github.com/mqllr/kubenv/pkg/config"
 	"github.com/mqllr/kubenv/pkg/k8s"
-	k8ssync "github.com/mqllr/kubenv/pkg/k8s/sync"
+	k8ssync "github.com/mqllr/kubenv/pkg/sync"
 )
 
 var syncCmd = &cobra.Command{
@@ -28,7 +28,7 @@ func sync(args []string) {
 	for name, conf := range config.Conf.K8SConfigs {
 		fmt.Printf("Sync kubeconfig %s", name)
 
-		s, err := k8ssync.NewSyncService(*conf.Sync)
+		s, err := k8ssync.NewService(*conf.Sync)
 		if err != nil {
 			fmt.Printf(" %v\n", promptui.IconBad)
 			klog.V(2).Infof("Cannot sync: %s", err)
