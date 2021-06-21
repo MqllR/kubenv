@@ -7,7 +7,6 @@ import (
 	"github.com/mqllr/kubenv/pkg/k8s"
 )
 
-// CommandExec represents command to be executed
 type CommandExec struct {
 	cmd []string
 }

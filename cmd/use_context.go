@@ -56,5 +56,8 @@ func useContext(args []string) {
 		klog.Fatalf("Cannot set the current context %s: %s", selectedContext, err)
 	}
 
-	kubeconfig.WriteFile(config.Conf.KubeConfig)
+	err = kubeconfig.WriteFile(config.Conf.KubeConfig)
+	if err != nil {
+		klog.Fatalf("Cannot write the kubeconfig file: %s", err)
+	}
 }

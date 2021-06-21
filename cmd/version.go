@@ -23,7 +23,7 @@ func NewVersionCmd() *cobra.Command {
 			switch output {
 			case "json":
 				v, _ := json.Marshal(map[string]string{"version": version})
-				fmt.Fprintf(cmd.OutOrStdout(), string(v))
+				fmt.Fprintf(cmd.OutOrStdout(), "%s", string(v))
 			case "":
 				fmt.Fprintf(cmd.OutOrStdout(), "%v kubenv v%s\n", promptui.IconGood, version)
 			default:

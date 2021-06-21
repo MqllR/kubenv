@@ -1,5 +1,7 @@
 package config
 
+import "fmt"
+
 // K8SConfig represents a K8SConfig, with only a sync description
 type K8SConfig struct {
 	Sync *K8SSync `yaml:"sync"`
@@ -31,9 +33,8 @@ func (c *Config) ListK8SConfigsNames() []string {
 	return configs
 }
 
-/*
-func (k *K8SConfigs) Validate() error {
-	for _, conf := range k.Configs {
+func (c *Config) Validate() error {
+	for _, conf := range c.K8SConfigs {
 		for _, syncMode := range availableK8SSyncMode {
 			if conf.Sync.Mode == syncMode {
 				return nil
@@ -45,4 +46,3 @@ func (k *K8SConfigs) Validate() error {
 
 	return nil
 }
-*/

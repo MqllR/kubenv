@@ -37,5 +37,9 @@ func LoadConfig() error {
 		return fmt.Errorf("Error when unmarshaling the config file %s: %s", viper.ConfigFileUsed(), err)
 	}
 
+	if err = Conf.Validate(); err != nil {
+		return fmt.Errorf("Bad config syntax: %s", err)
+	}
+
 	return nil
 }

@@ -131,11 +131,7 @@ func (kubeConfig *KubeConfig) IsContextExist(context string) bool {
 		return false
 	}
 
-	if !exist(kubeConfig.GetContextNames(), context) {
-		return false
-	}
-
-	return true
+	return exist(kubeConfig.GetContextNames(), context)
 }
 
 // SetCurrentContext just set the given context to CurrentContext

@@ -2,6 +2,7 @@ package cmd
 
 import (
 	goflag "flag"
+	"fmt"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -14,7 +15,6 @@ import (
 var (
 	// Used for flags.
 	cfgFile string
-	profile string
 
 	rootCmd = &cobra.Command{
 		Use:   "kubenv",
@@ -24,8 +24,14 @@ var (
 
 // Execute executes the root command.
 func Execute() error {
-	goflag.Set("logtostderr", "true")
-	goflag.CommandLine.Parse([]string{})
+	err := goflag.Set("logtostderr", "true")
+	if err != nil {
+		return fmt.Errorf("Error when setting the value to logtostderr %s", err)
+	}
+	err = goflag.CommandLine.Parse([]string{})
+	if err != nil {
+		return fmt.Errorf("Error when parsing params %s", err)
+	}
 
 	return rootCmd.Execute()
 }
@@ -49,7 +55,10 @@ func init() {
 
 func initConfig() {
 	viper.SetEnvPrefix("kubenv")
-	viper.BindEnv("config")
+	err := viper.BindEnv("config")
+	if err != nil {
+		klog.Fatalf("Error when binding the config key %s", err)
+	}
 
 	if cfgFile != "" {
 		viper.SetConfigFile(cfgFile)
@@ -64,7 +73,7 @@ func initConfig() {
 
 	viper.SetDefault("kubeConfig", os.Getenv("HOME")+"/.kube/config")
 
-	err := config.LoadConfig()
+	err = config.LoadConfig()
 	if err != nil {
 		klog.Fatal(err)
 	}
