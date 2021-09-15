@@ -13,37 +13,40 @@ const releaseVersionRe = `\d+(\.\d+){2}`
 func TestVersionOutput(t *testing.T) {
 	os.Setenv("KUBENV_CONFIG", os.Getenv("PWD")+"/../example/kubenv_example.yaml")
 
-	options := []struct {
+	options := map[string]struct {
 		arg   string
 		regex string
 	}{
-		{"", fmt.Sprintf(`^.* kubenv v%s\n`, releaseVersionRe)},
-		{"json", fmt.Sprintf(`\{"version":"%s"\}`, releaseVersionRe)},
-		{"foo", `Unknown output`},
+		"empty":         {"", fmt.Sprintf(`^.* kubenv v%s\n`, releaseVersionRe)},
+		"json":          {"json", fmt.Sprintf(`\{"version":"%s"\}`, releaseVersionRe)},
+		"non supported": {"foo", `Unknown output`},
 	}
 
-	cmd := NewVersionCmd()
-	b := bytes.NewBufferString("")
-	cmd.SetOut(b)
+	for name, option := range options {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 
-	for _, option := range options {
-		cmd.SetArgs([]string{"-o", option.arg})
-		b.Reset()
+			b := bytes.NewBufferString("")
 
-		err := cmd.Execute()
-		if err != nil {
-			t.Errorf("Cmd executing failed with arg %s, err: %s", option.arg, err)
-		}
+			cmd := NewVersionCmd()
+			cmd.SetOut(b)
+			cmd.SetArgs([]string{"-o", option.arg})
 
-		output := b.String()
-		match, err := regexp.MatchString(option.regex, output)
-		if err != nil {
-			t.Errorf("Regex failed for arg %s: %s", option.arg, err)
-		}
+			err := cmd.Execute()
+			if err != nil {
+				t.Errorf("Cmd executing failed with arg %s, err: %s", option.arg, err)
+			}
 
-		if !match {
-			t.Errorf("Regex doesn't match for arg %s, output: %s", option.arg, option)
-		}
+			output := b.String()
+			match, err := regexp.MatchString(option.regex, output)
+			if err != nil {
+				t.Errorf("Regex failed for arg %s: %s", option.arg, err)
+			}
+
+			if !match {
+				t.Errorf("Regex doesn't match for arg %s, output: %s", option.arg, option)
+			}
+		})
 	}
 }
 

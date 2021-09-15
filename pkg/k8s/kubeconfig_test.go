@@ -1,6 +1,8 @@
 package k8s
 
 import (
+	"fmt"
+	"reflect"
 	"testing"
 )
 
@@ -44,10 +46,9 @@ func TestNewKubeConfig(t *testing.T) {
 }
 
 func TestUnmarshal(t *testing.T) {
-	kubeconfig := NewKubeConfig()
-	err := kubeconfig.Unmarshal([]byte(testingConfig))
+	kubeconfig, err := loadKubeConfig()
 	if err != nil {
-		t.Errorf("Error when trying to unmarsh the test config: %s", err)
+		t.Error(err)
 	}
 
 	if len(kubeconfig.Clusters) != 1 {
@@ -73,4 +74,90 @@ func TestUnmarshal(t *testing.T) {
 	if kubeconfig.Clusters[0].Name != "fakecluster" {
 		t.Errorf("Excepted cluster name %s but got %s", "fakecluster", kubeconfig.Clusters[0].Name)
 	}
+}
+
+var (
+	testSuitesGetByName = []struct {
+		context     string
+		errExpected bool
+	}{
+		{"foo", true},
+		{"fakecontext", false},
+	}
+)
+
+func TestGetContextByContextName(t *testing.T) {
+	kubeconfig, err := loadKubeConfig()
+	if err != nil {
+		t.Error(err)
+	}
+
+	for _, test := range testSuitesGetByName {
+		context, err := kubeconfig.GetContextByContextName(test.context)
+		if err != nil && !test.errExpected {
+			t.Errorf("Got an error %s, but this wasn't expected", err.Error())
+		}
+
+		if test.errExpected {
+			continue
+		}
+
+		if !reflect.DeepEqual(context, kubeconfig.Contexts[0].Context) {
+			t.Error("Context returned doesn't match with the original kubeconfig")
+		}
+	}
+}
+
+func TestGetUserByContextName(t *testing.T) {
+	kubeconfig, err := loadKubeConfig()
+	if err != nil {
+		t.Error(err)
+	}
+
+	for _, test := range testSuitesGetByName {
+		user, err := kubeconfig.GetUserByContextName(test.context)
+		if err != nil && !test.errExpected {
+			t.Errorf("Got an error %s, but this wasn't expected", err.Error())
+		}
+
+		if test.errExpected {
+			continue
+		}
+
+		if !reflect.DeepEqual(user, kubeconfig.Users[0].User) {
+			t.Error("User returned doesn't match with the original kubeconfig")
+		}
+	}
+}
+
+func TestGetClusterByContextName(t *testing.T) {
+	kubeconfig, err := loadKubeConfig()
+	if err != nil {
+		t.Error(err)
+	}
+
+	for _, test := range testSuitesGetByName {
+		cluster, err := kubeconfig.GetClusterByContextName(test.context)
+		if err != nil && !test.errExpected {
+			t.Errorf("Got an error %s, but this wasn't expected", err.Error())
+		}
+
+		if test.errExpected {
+			continue
+		}
+
+		if !reflect.DeepEqual(cluster, kubeconfig.Clusters[0].Cluster) {
+			t.Error("Cluster returned doesn't match with the original kubeconfig")
+		}
+	}
+}
+
+func loadKubeConfig() (*KubeConfig, error) {
+	kubeconfig := NewKubeConfig()
+	err := kubeconfig.Unmarshal([]byte(testingConfig))
+	if err != nil {
+		return nil, fmt.Errorf("Error when trying to unmarsh the test config: %s", err)
+	}
+
+	return kubeconfig, nil
 }
