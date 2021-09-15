@@ -43,7 +43,7 @@ func init() {
 	rootCmd.PersistentFlags().AddGoFlagSet(goflag.CommandLine)
 
 	rootCmd.Flags().SortFlags = false
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.kubenv.yaml)")
+	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/kubenv.yaml)")
 
 	rootCmd.AddCommand(NewVersionCmd())
 
@@ -51,6 +51,11 @@ func init() {
 	rootCmd.AddCommand(syncCmd)
 	rootCmd.AddCommand(useContextCmd)
 	rootCmd.AddCommand(withContextCmd)
+	rootCmd.AddCommand(showCmd)
+
+	// show cmd
+	showCmd.AddCommand(showClusterCmd)
+	showCmd.AddCommand(showUserCmd)
 }
 
 func initConfig() {
