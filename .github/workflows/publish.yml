@@ -5,6 +5,10 @@ on:
     tags:
       - '*'
   workflow_dispatch:
+    inputs:
+      release:
+        description: 'Release number'
+        required: true
 
 jobs:
   build:
@@ -28,6 +32,6 @@ jobs:
         repo_token: ${{ secrets.GITHUB_TOKEN }}
         file: kubenv-*-amd64
         asset_name: kubenv
-        tag: ${{ github.ref }}
+        tag: ${{ github.event.inputs.release || github.ref }}
         file_glob: true
         overwrite: true
