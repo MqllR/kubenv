@@ -3,6 +3,7 @@ package cmd
 import (
 	"sort"
 
+	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 	"k8s.io/klog"
 
@@ -11,34 +12,32 @@ import (
 	"github.com/mqllr/kubenv/pkg/prompt"
 )
 
-var withContextCmd = &cobra.Command{
-	Aliases: []string{"wc"},
-	Use:     "with-context command ...",
+var withMultipleContextsCmd = &cobra.Command{
+	Aliases: []string{"wmc"},
+	Use:     "with-multiple-contexts command ...",
 	Short:   "Execute a command with a k8s context",
 	Args:    cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		withContext(args)
+		withMultipleContexts(args)
 	},
 }
 
 // with-context command
-func withContext(args []string) {
+func withMultipleContexts(args []string) {
 	c, err := k8s.NewKubeConfigFromFile(config.Conf.KubeConfig)
 	if err != nil {
 		klog.Fatalf("Error when loading kubeconfig file: %s", err)
 	}
 	contexts := c.GetContextNames()
-	sort.Strings(contexts)
-
 	klog.V(5).Infof("List of contexts: %v", contexts)
 
-	selectedContext, err := prompt.Prompt("Select the context to use", contexts)
-	if err != nil {
-		klog.Fatalf("%s", err)
-	}
+	sort.Strings(contexts)
 
-	err = c.ExecCommand(selectedContext, args)
-	if err != nil {
-		klog.Fatal(err)
+	p := prompt.NewMultipleSelectPrompt("Select the contexts:", contexts)
+	selectedContexts := p.Prompt()
+
+	for _, context := range selectedContexts {
+		color.Green("-> Context %s\n", context)
+		c.ExecCommand(context, args)
 	}
 }

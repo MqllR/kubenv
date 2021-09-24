@@ -48,10 +48,11 @@ func init() {
 	rootCmd.AddCommand(NewVersionCmd())
 
 	// root cmd
+	rootCmd.AddCommand(showCmd)
 	rootCmd.AddCommand(syncCmd)
 	rootCmd.AddCommand(useContextCmd)
 	rootCmd.AddCommand(withContextCmd)
-	rootCmd.AddCommand(showCmd)
+	rootCmd.AddCommand(withMultipleContextsCmd)
 
 	// show cmd
 	showCmd.AddCommand(showClusterCmd)
