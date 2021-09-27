@@ -43,3 +43,30 @@ The k8sConfigs section define the sync mode. 2 modes available: `local` for loca
         - |
           kind export -q kubeconfig --kubeconfig /tmp/test && cat /tmp/test
 ```
+
+## Usage
+
+Get started by picking up your kubeconfig files:
+
+```
+kubenv sync
+▸ Start the synchronization of kubeconfig file into /home/mql/.kube/config ...
+Sync kubeconfig foo ✔
+Sync kubeconfig bar ✔
+```
+
+Then you can change your default context by using the `use-context`
+
+```
+kubenv use-context
+```
+
+or execute a command against a single or multiple contexts:
+
+```
+kubenv with-context
+```
+
+The tool uses https://github.com/AlecAivazis/survey to navigate between contexts. If you prefer to use j/k to go down or up, press `esc`:
+
+> The user can also press esc to toggle the ability cycle through the options with the j and k keys to do down and up respectively.
