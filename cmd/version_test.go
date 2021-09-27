@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"regexp"
+	"strings"
 	"testing"
 )
 
@@ -51,12 +52,14 @@ func TestVersionOutput(t *testing.T) {
 }
 
 func TestVersionPublished(t *testing.T) {
+	// refs/tags/0.3.0
 	tag := os.Getenv("GITHUB_REF")
 	switch ok, _ := regexp.MatchString(releaseVersionRe, tag); {
 	case !ok:
 		t.Log("Not within a Github workflow")
 	case ok:
-		if tag != version {
+		a := strings.Split(tag, "/")
+		if a[len(a)-1] != version {
 			t.Errorf("Version mismatch, expected %s but got %s", version, tag)
 		}
 	}
