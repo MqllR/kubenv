@@ -2,13 +2,15 @@
 
 - [ ] Backup / restore kubeconfig when running the sync command
 - [ ] Switch between namespaces
-- [ ] Run command across mutliple clusters
+- [x] Run command across mutliple clusters
 - [ ] Read the kubenv config through http(s)
 
 ## Sync
 
 - [ ] Get kubeconfig files using http(s)
+- [ ] Get kubeconfig with glob
+- [ ] Add arguments to append a kubeconfig file to an existing config
 
 ## Prompt
 
-- [ ] Migrate to https://github.com/AlecAivazis/survey for multi select
+- [x] Migrate to https://github.com/AlecAivazis/survey for multi select

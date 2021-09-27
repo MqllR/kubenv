@@ -3,6 +3,7 @@ package cmd
 import (
 	"sort"
 
+	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 	"k8s.io/klog"
 
@@ -14,7 +15,7 @@ import (
 var withContextCmd = &cobra.Command{
 	Aliases: []string{"wc"},
 	Use:     "with-context command ...",
-	Short:   "Execute a command with a k8s context",
+	Short:   "Execute a command with one or multiple k8s context",
 	Args:    cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		withContext(args)
@@ -32,13 +33,17 @@ func withContext(args []string) {
 
 	klog.V(5).Infof("List of contexts: %v", contexts)
 
-	selectedContext, err := prompt.Prompt("Select the context to use", contexts)
+	p := prompt.NewPrompt("Select the contexts:", contexts)
+	selectedContexts, err := p.PromptMultipleSelect()
 	if err != nil {
-		klog.Fatalf("%s", err)
+		klog.Fatalf("Cannot get the answer from the prompt: %s", err)
 	}
 
-	err = c.ExecCommand(selectedContext, args)
-	if err != nil {
-		klog.Fatal(err)
+	for _, context := range selectedContexts {
+		color.Green("-> Context %s\n", context)
+		err := c.ExecCommand(context, args)
+		if err != nil {
+			klog.Errorf("Cmd error: %s", err)
+		}
 	}
 }

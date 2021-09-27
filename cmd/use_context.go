@@ -45,9 +45,10 @@ func useContext(args []string) {
 	} else {
 		sort.Strings(contexts)
 
-		selectedContext, err = prompt.Prompt("Select the context", contexts)
+		p := prompt.NewPrompt("Select the context", contexts)
+		selectedContext, err = p.PromptSelect()
 		if err != nil {
-			klog.Fatalf("%s", err)
+			klog.Fatalf("Cannot get the answer from the prompt: %s", err)
 		}
 	}
 

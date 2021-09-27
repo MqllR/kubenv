@@ -7,7 +7,7 @@
 Features:
 - Merge different kubeconfig file in different path into a single big kubeconfig
 - Switch between kubernetes context
-- Execute command using a single context
+- Execute a command using either a single or mutliple contexts
 
 ## Install
 

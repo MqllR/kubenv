@@ -52,7 +52,6 @@ func init() {
 	rootCmd.AddCommand(syncCmd)
 	rootCmd.AddCommand(useContextCmd)
 	rootCmd.AddCommand(withContextCmd)
-	rootCmd.AddCommand(withMultipleContextsCmd)
 
 	// show cmd
 	showCmd.AddCommand(showClusterCmd)
