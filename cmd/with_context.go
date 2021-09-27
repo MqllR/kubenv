@@ -1,11 +1,9 @@
 package cmd
 
 import (
-	"os"
-	"os/exec"
 	"sort"
-	"strings"
 
+	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 	"k8s.io/klog"
 
@@ -17,7 +15,7 @@ import (
 var withContextCmd = &cobra.Command{
 	Aliases: []string{"wc"},
 	Use:     "with-context command ...",
-	Short:   "Execute a command with a k8s context",
+	Short:   "Execute a command with one or multiple k8s context",
 	Args:    cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		withContext(args)
@@ -26,11 +24,7 @@ var withContextCmd = &cobra.Command{
 
 // with-context command
 func withContext(args []string) {
-	kubeConfig := config.Conf.KubeConfig
-
-	klog.V(2).Infof("Read the kubeconfig file from %s", kubeConfig)
-
-	c, err := k8s.NewKubeConfigFromFile(kubeConfig)
+	c, err := k8s.NewKubeConfigFromFile(config.Conf.KubeConfig)
 	if err != nil {
 		klog.Fatalf("Error when loading kubeconfig file: %s", err)
 	}
@@ -39,63 +33,17 @@ func withContext(args []string) {
 
 	klog.V(5).Infof("List of contexts: %v", contexts)
 
-	selectedContext, err := prompt.Prompt("Select the context to use", contexts)
+	p := prompt.NewPrompt("Select the contexts:", contexts)
+	selectedContexts, err := p.PromptMultipleSelect()
 	if err != nil {
-		klog.Fatalf("%s", err)
+		klog.Fatalf("Cannot get the answer from the prompt: %s", err)
 	}
 
-	err = c.SetCurrentContext(selectedContext)
-	if err != nil {
-		klog.Fatalf("Cannot set the current context %s: %s", selectedContext, err)
-	}
-
-	klog.V(2).Info("Create a temporary kubeconfig file")
-	tempKubeConfig, err := c.WriteTempFile()
-	if err != nil {
-		klog.Fatalf("Cannot create a temporary file %s", err)
-	}
-	defer os.Remove(tempKubeConfig)
-
-	klog.V(2).Infof("Original kubeconfig copied to %s using context %s", tempKubeConfig, selectedContext)
-
-	exe, err := exec.LookPath(args[0])
-	if err != nil {
-		klog.Fatal(err)
-	}
-
-	envs := os.Environ()
-	isExist := func(envs []string, key string) (bool, int) {
-		for i, env := range envs {
-			if env == key {
-				return true, i
-			}
+	for _, context := range selectedContexts {
+		color.Green("-> Context %s\n", context)
+		err := c.ExecCommand(context, args)
+		if err != nil {
+			klog.Errorf("Cmd error: %s", err)
 		}
-
-		return false, 0
-	}
-
-	exist, i := isExist(envs, "KUBECONFIG")
-	localKubeConfig := "KUBECONFIG=" + tempKubeConfig
-	if exist {
-		envs[i] = localKubeConfig
-	} else {
-		envs = append(envs, localKubeConfig)
-	}
-
-	cmd := exec.Cmd{
-		Path:   exe,
-		Args:   args[0:],
-		Env:    envs,
-		Stdin:  os.Stdin,
-		Stdout: os.Stdout,
-		Stderr: os.Stderr,
-	}
-
-	klog.V(2).Infof("Running command: %s", strings.Join(args, " "))
-	klog.V(5).Infof("Running command: %s with environment variable %v", strings.Join(args, " "), envs)
-
-	err = cmd.Run()
-	if err != nil {
-		klog.Fatalf("Error when running command: %s", err)
 	}
 }

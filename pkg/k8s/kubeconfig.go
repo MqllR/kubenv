@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"os/exec"
 
 	"gopkg.in/yaml.v2"
 )
@@ -185,4 +186,60 @@ func (kubeConfig *KubeConfig) GetUserByContextName(context string) (*User, error
 	}
 
 	return nil, fmt.Errorf("User not found for the context %s", context)
+}
+
+// ExecCommand executes any kind of command for a selected context
+// this will write a temporary kubeconfig file in /tmp.
+func (kubeConfig *KubeConfig) ExecCommand(context string, cmd []string) error {
+	err := kubeConfig.SetCurrentContext(context)
+	if err != nil {
+		return fmt.Errorf("Error when settings the context: %s", err)
+	}
+
+	tempKubeConfig, err := kubeConfig.WriteTempFile()
+	if err != nil {
+		return fmt.Errorf("Error when creating the temporary kubeconfig file: %s", err)
+	}
+	defer os.Remove(tempKubeConfig)
+
+	exe, err := exec.LookPath(cmd[0])
+	if err != nil {
+		return fmt.Errorf("Binary not found: %s", err)
+	}
+
+	envs := os.Environ()
+	isExist := func(envs []string, key string) (bool, int) {
+		for i, env := range envs {
+			if env == key {
+				return true, i
+			}
+		}
+
+		return false, 0
+	}
+
+	exist, i := isExist(envs, "KUBECONFIG")
+	localKubeConfig := "KUBECONFIG=" + tempKubeConfig
+	if exist {
+		envs[i] = localKubeConfig
+	} else {
+		envs = append(envs, localKubeConfig)
+	}
+
+	c := exec.Cmd{
+		Path:   exe,
+		Args:   cmd[0:],
+		Env:    envs,
+		Stdin:  os.Stdin,
+		Stdout: os.Stdout,
+		Stderr: os.Stderr,
+	}
+
+	err = c.Run()
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
