@@ -4,5 +4,6 @@ var (
 	SyncMode = []string{
 		"local",
 		"exec",
+		"glob",
 	}
 )
