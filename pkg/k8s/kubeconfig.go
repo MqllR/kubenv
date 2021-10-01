@@ -71,7 +71,7 @@ func (kubeConfig *KubeConfig) WriteFile(file string) error {
 		return nil
 	}
 
-	return ioutil.WriteFile(file, config, 0644)
+	return ioutil.WriteFile(file, config, 0600)
 }
 
 // WriteTempFile writes the kubeconfig in a temporary file
