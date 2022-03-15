@@ -3,19 +3,12 @@ package cmd
 import (
 	goflag "flag"
 	"fmt"
-	"os"
 
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 	"k8s.io/klog"
-
-	"github.com/mqllr/kubenv/pkg/config"
 )
 
 var (
-	// Used for flags.
-	cfgFile string
-
 	rootCmd = &cobra.Command{
 		Use:   "kubenv",
 		Short: "A tool to manage multiple Kube cluster",
@@ -37,49 +30,20 @@ func Execute() error {
 }
 
 func init() {
-	cobra.OnInitialize(initConfig)
-
 	klog.InitFlags(nil)
 	rootCmd.PersistentFlags().AddGoFlagSet(goflag.CommandLine)
 
 	rootCmd.Flags().SortFlags = false
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/kubenv.yaml)")
 
-	rootCmd.AddCommand(NewVersionCmd())
+	rootCmd.AddCommand(versionCmd())
 
 	// root cmd
-	rootCmd.AddCommand(showCmd)
-	rootCmd.AddCommand(syncCmd)
-	rootCmd.AddCommand(useContextCmd)
-	rootCmd.AddCommand(withContextCmd)
+	rootCmd.AddCommand(showCmd())
+	rootCmd.AddCommand(syncCommand())
+	rootCmd.AddCommand(useContextCmd())
+	rootCmd.AddCommand(withContextCmd())
 
 	// show cmd
-	showCmd.AddCommand(showClusterCmd)
-	showCmd.AddCommand(showUserCmd)
-}
-
-func initConfig() {
-	viper.SetEnvPrefix("kubenv")
-	err := viper.BindEnv("config")
-	if err != nil {
-		klog.Fatalf("Error when binding the config key %s", err)
-	}
-
-	if cfgFile != "" {
-		viper.SetConfigFile(cfgFile)
-	} else if viper.GetString("config") != "" {
-		viper.SetConfigFile(viper.GetString("config"))
-	} else {
-		viper.SetConfigName("kubenv")
-		viper.SetConfigType("yaml")
-		viper.AddConfigPath("$HOME/")
-		viper.AddConfigPath(".")
-	}
-
-	viper.SetDefault("kubeConfig", os.Getenv("HOME")+"/.kube/config")
-
-	err = config.LoadConfig()
-	if err != nil {
-		klog.Fatal(err)
-	}
+	showCmd().AddCommand(showClusterCmd())
+	showCmd().AddCommand(showUserCmd())
 }

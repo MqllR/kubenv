@@ -1,45 +1,21 @@
 package config
 
 import (
-	"fmt"
-	"sync"
-
-	"github.com/spf13/viper"
+	"os"
+	"path"
 )
 
-var (
-	// Conf store the full config. It can be used to access
-	// to any configuration information after calling LoadConfig()
-	Conf   *Config
-	confMu = &sync.Mutex{}
-)
+func GetKubeConfig() string {
+	kubeconfig := os.Getenv("KUBECONFIG")
 
-// Config global config description
-type Config struct {
-	KubeConfig string                `yaml:"kubeConfig"`
-	K8SConfigs map[string]*K8SConfig `mapstructure:"k8sConfigs"`
-}
+	if kubeconfig == "" {
+		home, err := os.UserHomeDir()
+		if err != nil {
+			return ""
+		}
 
-// LoadConfig should be call first to load the configuration. It stores
-// the configuration in Conf.
-func LoadConfig() error {
-	confMu.Lock()
-	defer confMu.Unlock()
-
-	err := viper.ReadInConfig()
-	if err != nil {
-		return fmt.Errorf("Error Using config file %s: %s", viper.ConfigFileUsed(), err)
+		return path.Join(home, ".kube/config")
 	}
 
-	Conf = &Config{}
-	err = viper.Unmarshal(Conf)
-	if err != nil {
-		return fmt.Errorf("Error when unmarshaling the config file %s: %s", viper.ConfigFileUsed(), err)
-	}
-
-	if err = Conf.Validate(); err != nil {
-		return fmt.Errorf("Bad config syntax: %s", err)
-	}
-
-	return nil
+	return kubeconfig
 }

@@ -1,7 +1,7 @@
 package config
 
 var (
-	availableK8SSyncMode = []string{
+	SyncMode = []string{
 		"local",
 		"exec",
 	}

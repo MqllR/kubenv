@@ -29,7 +29,7 @@ func TestVersionOutput(t *testing.T) {
 
 			b := bytes.NewBufferString("")
 
-			cmd := NewVersionCmd()
+			cmd := versionCmd()
 			cmd.SetOut(b)
 			cmd.SetArgs([]string{"-o", option.arg})
 

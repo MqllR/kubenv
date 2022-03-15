@@ -1,11 +1,17 @@
 package sync
 
 import (
-	"fmt"
+	"strings"
 
-	"github.com/mqllr/kubenv/pkg/config"
 	"github.com/mqllr/kubenv/pkg/k8s"
 )
+
+type SyncOptions struct {
+	AppendTo bool
+	Mode     string
+	Path     string
+	Command  string
+}
 
 // Sync implements a way to pick up a kubeconfig
 type Sync interface {
@@ -15,38 +21,26 @@ type Sync interface {
 // Service represents the required information to
 // pick a kubeconfig according to the config
 type Service struct {
-	s      Sync
-	config config.K8SSync
+	s Sync
 }
 
 // NewService creates a SyncService according to the
 // sync type
-func NewService(conf config.K8SSync) (*Service, error) {
-	sync := &Service{
-		config: conf,
-	}
+func NewService(opts *SyncOptions) *Service {
+	sync := &Service{}
 
-	switch conf.Mode {
+	switch opts.Mode {
 	case "local":
-		sync.s = NewLocalFile(conf.Path)
+		sync.s = NewLocalFile(opts.Path)
 	case "exec":
-		sync.s = NewCommandExec(conf.Command)
-	default:
-		return nil, fmt.Errorf("Sync mode not implemented")
+		cmd := strings.Split(opts.Command, " ")
+		sync.s = NewCommandExec(cmd)
 	}
 
-	return sync, nil
+	return sync
 }
 
-// AppendKubeConfig merges the kubeconfig synchronised into the
-// kubeConfig in argument
-func (s *Service) AppendKubeConfig(kubeConfig *k8s.KubeConfig) error {
-	k, err := s.s.GetKubeConfig()
-	if err != nil {
-		return fmt.Errorf("Cannot get the kubeconfig: %s", err)
-	}
-
-	kubeConfig.Append(k)
-
-	return nil
+// GetKubeConfig retrieve a kubeconfig using a sync mode
+func (s *Service) GetKubeConfig() (*k8s.KubeConfig, error) {
+	return s.s.GetKubeConfig()
 }
