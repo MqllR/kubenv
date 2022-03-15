@@ -10,16 +10,19 @@ import (
 	"k8s.io/klog"
 )
 
-var showUserCmd = &cobra.Command{
-	Use:   "user",
-	Short: "Print out the current context's user",
-	Run: func(cmd *cobra.Command, args []string) {
-		showUser(args)
-	},
+func showUserCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "user",
+		Short: "Print out the current context's user",
+		Run: func(cmd *cobra.Command, args []string) {
+			showUser(args)
+		},
+	}
+	return cmd
 }
 
 func showUser(args []string) {
-	kubeconfig, err := k8s.NewKubeConfigFromFile(config.Conf.KubeConfig)
+	kubeconfig, err := k8s.NewKubeConfigFromFile(config.GetKubeConfig())
 	if err != nil {
 		klog.Fatalf("Cannot load the kubeconfig file: %s", err)
 	}

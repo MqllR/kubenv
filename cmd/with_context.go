@@ -12,19 +12,22 @@ import (
 	"github.com/mqllr/kubenv/pkg/prompt"
 )
 
-var withContextCmd = &cobra.Command{
-	Aliases: []string{"wc"},
-	Use:     "with-context command ...",
-	Short:   "Execute a command with one or multiple k8s context",
-	Args:    cobra.MinimumNArgs(1),
-	Run: func(cmd *cobra.Command, args []string) {
-		withContext(args)
-	},
+func withContextCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Aliases: []string{"wc"},
+		Use:     "with-context command ...",
+		Short:   "Execute a command with one or multiple k8s context",
+		Args:    cobra.MinimumNArgs(1),
+		Run: func(cmd *cobra.Command, args []string) {
+			withContext(args)
+		},
+	}
+	return cmd
 }
 
 // with-context command
 func withContext(args []string) {
-	c, err := k8s.NewKubeConfigFromFile(config.Conf.KubeConfig)
+	c, err := k8s.NewKubeConfigFromFile(config.GetKubeConfig())
 	if err != nil {
 		klog.Fatalf("Error when loading kubeconfig file: %s", err)
 	}

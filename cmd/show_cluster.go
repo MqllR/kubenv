@@ -10,16 +10,20 @@ import (
 	"k8s.io/klog"
 )
 
-var showClusterCmd = &cobra.Command{
-	Use:   "cluster",
-	Short: "Print out the current context's cluster",
-	Run: func(cmd *cobra.Command, args []string) {
-		showCluster(args)
-	},
+func showClusterCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "cluster",
+		Short: "Print out the current context's cluster",
+		Run: func(cmd *cobra.Command, args []string) {
+			showCluster(args)
+		},
+	}
+
+	return cmd
 }
 
 func showCluster(args []string) {
-	kubeconfig, err := k8s.NewKubeConfigFromFile(config.Conf.KubeConfig)
+	kubeconfig, err := k8s.NewKubeConfigFromFile(config.GetKubeConfig())
 	if err != nil {
 		klog.Fatalf("Cannot load the kubeconfig file: %s", err)
 	}

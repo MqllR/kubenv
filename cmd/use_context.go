@@ -11,24 +11,31 @@ import (
 	"github.com/mqllr/kubenv/pkg/prompt"
 )
 
-var context string
-
-var useContextCmd = &cobra.Command{
-	Aliases: []string{"uc"},
-	Use:     "use-context",
-	Short:   "Switch to k8s context",
-	Run: func(cmd *cobra.Command, args []string) {
-		useContext(args)
-	},
+type useContextOptions struct {
+	context string
 }
 
-func init() {
-	useContextCmd.Flags().StringVarP(&context, "context", "c", "", "Kubernetes context to switch")
+func useContextCmd() *cobra.Command {
+	opts := useContextOptions{}
+
+	cmd := &cobra.Command{
+		Use:     "use-context",
+		Short:   "Switch to k8s context",
+		Aliases: []string{"uc"},
+		Run: func(cmd *cobra.Command, args []string) {
+			useContext(&opts)
+		},
+	}
+
+	f := cmd.Flags()
+	f.StringVarP(&opts.context, "context", "c", "", "Kubernetes context to switch")
+
+	return cmd
 }
 
 // use-context command
-func useContext(args []string) {
-	kubeconfig, err := k8s.NewKubeConfigFromFile(config.Conf.KubeConfig)
+func useContext(opts *useContextOptions) {
+	kubeconfig, err := k8s.NewKubeConfigFromFile(config.GetKubeConfig())
 	if err != nil {
 		klog.Fatalf("Cannot load kubeconfig file: %s", err)
 	}
@@ -37,11 +44,11 @@ func useContext(args []string) {
 
 	var selectedContext string
 
-	if context != "" {
-		if !kubeconfig.IsContextExist(context) {
-			klog.Fatalf("Context %s doesn't exist", context)
+	if opts.context != "" {
+		if !kubeconfig.IsContextExist(opts.context) {
+			klog.Fatalf("Context %s doesn't exist", opts.context)
 		}
-		selectedContext = context
+		selectedContext = opts.context
 	} else {
 		sort.Strings(contexts)
 
@@ -57,7 +64,7 @@ func useContext(args []string) {
 		klog.Fatalf("Cannot set the current context %s: %s", selectedContext, err)
 	}
 
-	err = kubeconfig.WriteFile(config.Conf.KubeConfig)
+	err = kubeconfig.WriteFile(config.GetKubeConfig())
 	if err != nil {
 		klog.Fatalf("Cannot write the kubeconfig file: %s", err)
 	}

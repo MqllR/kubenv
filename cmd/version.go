@@ -9,18 +9,22 @@ import (
 )
 
 const (
-	version = "0.3.2"
+	version = "1.0.0"
 )
 
-var output string
+type versionOptions struct {
+	output string
+}
 
-// NewVersionCmd cobra command for version
-func NewVersionCmd() *cobra.Command {
+// versionCmd cobra command for version
+func versionCmd() *cobra.Command {
+	opts := versionOptions{}
+
 	cmd := &cobra.Command{
 		Use:   "version",
 		Short: "Print the CLI version",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			switch output {
+			switch opts.output {
 			case "json":
 				v, _ := json.Marshal(map[string]string{"version": version})
 				fmt.Fprintf(cmd.OutOrStdout(), "%s", string(v))
@@ -34,7 +38,8 @@ func NewVersionCmd() *cobra.Command {
 		Aliases: []string{"v"},
 	}
 
-	cmd.Flags().StringVarP(&output, "output", "o", "", "Output: json")
+	f := cmd.Flags()
+	f.StringVarP(&opts.output, "output", "o", "", "Output: json")
 
 	return cmd
 }
