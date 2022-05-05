@@ -147,9 +147,9 @@ func (kubeConfig *KubeConfig) SetCurrentContext(context string) error {
 
 // GetContextByContextName returns a Context from its name
 func (kubeConfig *KubeConfig) GetContextByContextName(context string) (*Context, error) {
-	for _, ctx := range kubeConfig.Contexts {
-		if ctx.Name == context {
-			return ctx.Context, nil
+	for _, c := range kubeConfig.Contexts {
+		if c.Name == context {
+			return c.Context, nil
 		}
 	}
 
@@ -157,30 +157,30 @@ func (kubeConfig *KubeConfig) GetContextByContextName(context string) (*Context,
 }
 
 // GetClusterByContextName returns a Cluster from the context name
-func (kubeConfig *KubeConfig) GetClusterByContextName(context string) (*Cluster, error) {
-	ctx, err := kubeConfig.GetContextByContextName(context)
+func (kubeConfig *KubeConfig) GetClusterByContextName(context string) (interface{}, error) {
+	c, err := kubeConfig.GetContextByContextName(context)
 	if err != nil {
 		return nil, err
 	}
 
 	for _, cluster := range kubeConfig.Clusters {
-		if cluster.Name == ctx.Cluster {
+		if cluster.Name == c.Cluster {
 			return cluster.Cluster, nil
 		}
 	}
 
-	return nil, fmt.Errorf("Cluster not found not found for the context %s", context)
+	return nil, fmt.Errorf("Cluster not found for the context %s", context)
 }
 
 // GetUserByContextName returns a Users from the context name
-func (kubeConfig *KubeConfig) GetUserByContextName(context string) (*User, error) {
-	ctx, err := kubeConfig.GetContextByContextName(context)
+func (kubeConfig *KubeConfig) GetUserByContextName(context string) (interface{}, error) {
+	c, err := kubeConfig.GetContextByContextName(context)
 	if err != nil {
 		return nil, err
 	}
 
 	for _, user := range kubeConfig.Users {
-		if user.Name == ctx.User {
+		if user.Name == c.User {
 			return user.User, nil
 		}
 	}
@@ -188,8 +188,8 @@ func (kubeConfig *KubeConfig) GetUserByContextName(context string) (*User, error
 	return nil, fmt.Errorf("User not found for the context %s", context)
 }
 
-// ExecCommand executes any kind of command for a selected context
-// this will write a temporary kubeconfig file in /tmp.
+// ExecCommand executes a command for a selected context
+// this will write a temporary kubeconfig file in /tmp
 func (kubeConfig *KubeConfig) ExecCommand(context string, cmd []string) error {
 	err := kubeConfig.SetCurrentContext(context)
 	if err != nil {
