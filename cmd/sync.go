@@ -30,6 +30,7 @@ func syncCommand() *cobra.Command {
 	f.StringVarP(&opts.Mode, "mode", "m", "local", "Mode to read a kubeconfig file. Either local, exec or glob")
 	f.StringVar(&opts.Path, "path", "", "A path to the local kubeconfig file")
 	f.StringVar(&opts.Command, "command", "", "A command to execute to retrieve the kubeconfig file")
+	f.StringVar(&opts.Glob, "glob", "", "A glob pattern to retrieve the kubeconfig files. Relative path to / (ex: home/foo/bar/*)")
 
 	return cmd
 }

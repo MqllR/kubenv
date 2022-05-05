@@ -2,6 +2,7 @@ package k8s
 
 import (
 	"fmt"
+	"io"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -38,6 +39,22 @@ func NewKubeConfigFromFile(kubeconfig string) (*KubeConfig, error) {
 	content, err := ioutil.ReadFile(kubeconfig)
 	if err != nil {
 		return nil, fmt.Errorf("Error when reading kubeconfig file: %s", err)
+	}
+
+	k := NewKubeConfig()
+
+	if err = k.Unmarshal(content); err != nil {
+		return nil, fmt.Errorf("Can't unmarshal the kubeconfig file: %s", err)
+	}
+
+	return k, nil
+}
+
+// NewKubeConfigFromReader creates a new struct KubeConfig from an io.Reader
+func NewKubeConfigFromReader(r io.Reader) (*KubeConfig, error) {
+	content, err := ioutil.ReadAll(r)
+	if err != nil {
+		return nil, fmt.Errorf("Error when reading kubeconfig reader: %s", err)
 	}
 
 	k := NewKubeConfig()

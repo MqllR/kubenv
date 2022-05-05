@@ -1,20 +1,24 @@
 package sync
 
-import "github.com/mqllr/kubenv/pkg/k8s"
+import (
+	"io"
+
+	"github.com/mqllr/kubenv/pkg/k8s"
+)
 
 // LocalFile is the path of a kubeconfig file
 type LocalFile struct {
-	path string
+	reader io.Reader
 }
 
 // NewLocalFile creates a LocalFile
-func NewLocalFile(path string) *LocalFile {
+func NewLocalFile(reader io.Reader) *LocalFile {
 	return &LocalFile{
-		path: path,
+		reader,
 	}
 }
 
 // GetKubeConfig just returns a KubeConfig
 func (local *LocalFile) GetKubeConfig() (*k8s.KubeConfig, error) {
-	return k8s.NewKubeConfigFromFile(local.path)
+	return k8s.NewKubeConfigFromReader(local.reader)
 }

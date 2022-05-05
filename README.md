@@ -33,6 +33,13 @@ kubenv sync -a=false -m=local --path="/path/to/kubeconfig"
 ▸ Start the synchronization of kubeconfig file into /home/john/.kube/config ...
 ```
 
+And also:
+
+```
+kubenv sync -a=false -m=glob --glob="path/to/kubeconfig"
+▸ Start the synchronization of kubeconfig file into /home/john/.kube/config ...
+```
+
 Then you can change your default context by using the `use-context`
 
 ```
