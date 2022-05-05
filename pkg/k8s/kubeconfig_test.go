@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -38,6 +39,27 @@ users:
 
 func TestNewKubeConfig(t *testing.T) {
 	kubeconfig := NewKubeConfig()
+
+	if kubeconfig.APIVersion != "v1" {
+		t.Errorf("Excepted value for ApiVersion %s but got %s", "v1", kubeconfig.APIVersion)
+	}
+
+	if kubeconfig.Kind != "Config" {
+		t.Errorf("Excepted value for Kind %s but got %s", "Config", kubeconfig.Kind)
+	}
+}
+
+func TestNewKubeConfigFromReader(t *testing.T) {
+	r := strings.NewReader(testingConfig)
+	kubeconfig, err := NewKubeConfigFromReader(r)
+
+	if err != nil {
+		t.Errorf("Unexpeted err: %s", err)
+	}
+
+	if kubeconfig.GetContextNames()[0] != "fakecontext" {
+		t.Errorf("Got context %s but was expecting to get %s", kubeconfig.GetContextNames()[0], "fakecontext")
+	}
 
 	if kubeconfig.APIVersion != "v1" {
 		t.Errorf("Excepted value for ApiVersion %s but got %s", "v1", kubeconfig.APIVersion)

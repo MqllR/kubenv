@@ -13,7 +13,7 @@ func TestGlob(t *testing.T) {
 		"folder/bar": {Data: []byte(kubeconfig2)},
 	}
 
-	glob := sync.NewGlob(fs, "folder/**")
+	glob := sync.NewGlob(fs, "folder/*")
 	kubeconfig, err := glob.GetKubeConfig()
 
 	if err != nil {
@@ -27,5 +27,9 @@ func TestGlob(t *testing.T) {
 
 	if contexts[1] != "fakecontext1" {
 		t.Errorf("Got context %s but was expecting to get %s", contexts[0], "fakecontext1")
+	}
+
+	if contexts[0] != "fakecontext2" {
+		t.Errorf("Got context %s but was expecting to get %s", contexts[0], "fakecontext2")
 	}
 }
