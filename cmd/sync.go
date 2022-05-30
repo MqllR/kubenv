@@ -2,9 +2,11 @@ package cmd
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
+	"k8s.io/klog"
 
 	"github.com/mqllr/kubenv/pkg/config"
 	"github.com/mqllr/kubenv/pkg/k8s"
@@ -59,7 +61,12 @@ func runSync(opts *sync.SyncOptions) error {
 	var err error
 
 	if opts.AppendTo {
-		baseKubeConfig, err = k8s.NewKubeConfigFromFile(config.GetKubeConfig())
+		f, err := os.Open(config.GetKubeConfig())
+		if err != nil {
+			klog.Fatalf("Cannot open the kube config: %s", err)
+		}
+
+		baseKubeConfig, err = k8s.NewKubeConfigFromReader(f)
 		if err != nil {
 			return fmt.Errorf("Something went wrong: %s", err)
 		}

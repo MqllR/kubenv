@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"os"
 	"sort"
 
 	"github.com/fatih/color"
@@ -27,7 +28,12 @@ func withContextCmd() *cobra.Command {
 
 // with-context command
 func withContext(args []string) {
-	c, err := k8s.NewKubeConfigFromFile(config.GetKubeConfig())
+	f, err := os.Open(config.GetKubeConfig())
+	if err != nil {
+		klog.Fatalf("Cannot open the kube config: %s", err)
+	}
+
+	c, err := k8s.NewKubeConfigFromReader(f)
 	if err != nil {
 		klog.Fatalf("Error when loading kubeconfig file: %s", err)
 	}
