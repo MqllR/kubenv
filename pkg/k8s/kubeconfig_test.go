@@ -1,4 +1,4 @@
-package k8s
+package k8s_test
 
 import (
 	"fmt"
@@ -8,6 +8,8 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+
+	"github.com/mqllr/kubenv/pkg/k8s"
 )
 
 var testingConfig = `
@@ -38,7 +40,7 @@ users:
 `
 
 func TestNewKubeConfig(t *testing.T) {
-	kubeconfig := NewKubeConfig()
+	kubeconfig := k8s.NewKubeConfig()
 
 	if kubeconfig.APIVersion != "v1" {
 		t.Errorf("Excepted value for ApiVersion %s but got %s", "v1", kubeconfig.APIVersion)
@@ -51,7 +53,7 @@ func TestNewKubeConfig(t *testing.T) {
 
 func TestNewKubeConfigFromReader(t *testing.T) {
 	r := strings.NewReader(testingConfig)
-	kubeconfig, err := NewKubeConfigFromReader(r)
+	kubeconfig, err := k8s.NewKubeConfigFromReader(r)
 
 	if err != nil {
 		t.Errorf("Unexpeted err: %s", err)
@@ -67,37 +69,6 @@ func TestNewKubeConfigFromReader(t *testing.T) {
 
 	if kubeconfig.Kind != "Config" {
 		t.Errorf("Excepted value for Kind %s but got %s", "Config", kubeconfig.Kind)
-	}
-}
-
-func TestUnmarshal(t *testing.T) {
-	kubeconfig, err := loadKubeConfig()
-	if err != nil {
-		t.Error(err)
-	}
-
-	if len(kubeconfig.Clusters) != 1 {
-		t.Errorf("Excepted array length of clusters %d but got %d", 1, len(kubeconfig.Clusters))
-	}
-
-	if len(kubeconfig.Users) != 1 {
-		t.Errorf("Excepted array length of users %d but got %d", 1, len(kubeconfig.Users))
-	}
-
-	if len(kubeconfig.Contexts) != 1 {
-		t.Errorf("Excepted array length of contexts %d but got %d", 1, len(kubeconfig.Contexts))
-	}
-
-	if kubeconfig.Contexts[0].Name != "fakecontext" {
-		t.Errorf("Excepted context name %s but got %s", "fakecontext", kubeconfig.Contexts[0].Name)
-	}
-
-	if kubeconfig.Users[0].Name != "fakeuser" {
-		t.Errorf("Excepted user name %s but got %s", "fakeuser", kubeconfig.Users[0].Name)
-	}
-
-	if kubeconfig.Clusters[0].Name != "fakecluster" {
-		t.Errorf("Excepted cluster name %s but got %s", "fakecluster", kubeconfig.Clusters[0].Name)
 	}
 }
 
@@ -211,9 +182,9 @@ func TestWriteFile(t *testing.T) {
 	}
 }
 
-func loadKubeConfig() (*KubeConfig, error) {
-	kubeconfig := NewKubeConfig()
-	err := kubeconfig.Unmarshal([]byte(testingConfig))
+func loadKubeConfig() (*k8s.KubeConfig, error) {
+	r := strings.NewReader(testingConfig)
+	kubeconfig, err := k8s.NewKubeConfigFromReader(r)
 	if err != nil {
 		return nil, fmt.Errorf("Error when trying to unmarsh the test config: %s", err)
 	}

@@ -3,6 +3,7 @@ package sync
 import (
 	"fmt"
 	"os/exec"
+	"strings"
 
 	"github.com/mqllr/kubenv/pkg/k8s"
 )
@@ -21,15 +22,16 @@ func NewCommandExec(cmd []string) *CommandExec {
 // GetKubeConfig executes the command
 // returns a KubeConfig
 func (cmd *CommandExec) GetKubeConfig() (*k8s.KubeConfig, error) {
-	com := exec.Command(cmd.cmd[0], cmd.cmd[1:]...)
+	command := exec.Command(cmd.cmd[0], cmd.cmd[1:]...)
 
-	output, err := com.CombinedOutput()
+	output, err := command.CombinedOutput()
 	if err != nil {
 		return nil, fmt.Errorf("Error on sync command: %s", err)
 	}
 
-	kubeconfig := k8s.NewKubeConfig()
-	err = kubeconfig.Unmarshal(output)
+	r := strings.NewReader(string(output))
+
+	kubeconfig, err := k8s.NewKubeConfigFromReader(r)
 	if err != nil {
 		return nil, fmt.Errorf("Bad kubeconfig file: %s", err)
 	}

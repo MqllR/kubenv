@@ -43,7 +43,7 @@ func NewKubeConfigFromFile(kubeconfig string) (*KubeConfig, error) {
 
 	k := NewKubeConfig()
 
-	if err = k.Unmarshal(content); err != nil {
+	if err = k.unmarshal(content); err != nil {
 		return nil, fmt.Errorf("Can't unmarshal the kubeconfig file: %s", err)
 	}
 
@@ -59,31 +59,16 @@ func NewKubeConfigFromReader(r io.Reader) (*KubeConfig, error) {
 
 	k := NewKubeConfig()
 
-	if err = k.Unmarshal(content); err != nil {
+	if err = k.unmarshal(content); err != nil {
 		return nil, fmt.Errorf("Can't unmarshal the kubeconfig file: %s", err)
 	}
 
 	return k, nil
 }
 
-// Unmarshal fills a kubeConfig struct with yaml.Unmarshal
-func (kubeConfig *KubeConfig) Unmarshal(config []byte) error {
-	err := yaml.Unmarshal(config, kubeConfig)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// Marshal converts to []byte a KubeConfig
-func (kubeConfig *KubeConfig) Marshal() ([]byte, error) {
-	return yaml.Marshal(&kubeConfig)
-}
-
 // WriteFile writes the kubeconfig in the given file
 func (kubeConfig *KubeConfig) WriteFile(file string) error {
-	config, err := kubeConfig.Marshal()
+	config, err := kubeConfig.marshal()
 	if err != nil {
 		return nil
 	}
@@ -102,7 +87,7 @@ func (kubeConfig *KubeConfig) WriteTempFile() (string, error) {
 	tempKubeConfig := temp.Name()
 	defer temp.Close()
 
-	data, err := kubeConfig.Marshal()
+	data, err := kubeConfig.marshal()
 	if err != nil {
 		return "", fmt.Errorf("Unable to marshal kubeconfig: %s", err)
 	}
@@ -134,7 +119,7 @@ func (kubeConfig *KubeConfig) GetContextNames() []string {
 
 // ToString converts a KubeConfig in a string
 func (kubeConfig *KubeConfig) ToString() (string, error) {
-	config, err := kubeConfig.Marshal()
+	config, err := kubeConfig.marshal()
 	return string(config), err
 }
 
@@ -259,4 +244,19 @@ func (kubeConfig *KubeConfig) ExecCommand(context string, cmd []string) error {
 	}
 
 	return nil
+}
+
+// unmarshal fills a kubeConfig struct with yaml.Unmarshal
+func (kubeConfig *KubeConfig) unmarshal(config []byte) error {
+	err := yaml.Unmarshal(config, kubeConfig)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// marshal converts to []byte a KubeConfig
+func (kubeConfig *KubeConfig) marshal() ([]byte, error) {
+	return yaml.Marshal(&kubeConfig)
 }
