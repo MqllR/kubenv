@@ -38,12 +38,14 @@ func init() {
 	rootCmd.AddCommand(versionCmd())
 
 	// root cmd
-	rootCmd.AddCommand(showCmd())
 	rootCmd.AddCommand(syncCommand())
 	rootCmd.AddCommand(useContextCmd())
 	rootCmd.AddCommand(withContextCmd())
 
 	// show cmd
-	showCmd().AddCommand(showClusterCmd())
-	showCmd().AddCommand(showUserCmd())
+	s := showCmd()
+	s.AddCommand(showUserCmd())
+	s.AddCommand(showClusterCmd())
+
+	rootCmd.AddCommand(s)
 }
