@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"os"
 	"sort"
 
 	"github.com/spf13/cobra"
@@ -35,7 +36,12 @@ func useContextCmd() *cobra.Command {
 
 // use-context command
 func useContext(opts *useContextOptions) {
-	kubeconfig, err := k8s.NewKubeConfigFromFile(config.GetKubeConfig())
+	f, err := os.Open(config.GetKubeConfig())
+	if err != nil {
+		klog.Fatalf("Cannot open the kube config: %s", err)
+	}
+
+	kubeconfig, err := k8s.NewKubeConfigFromReader(f)
 	if err != nil {
 		klog.Fatalf("Cannot load kubeconfig file: %s", err)
 	}

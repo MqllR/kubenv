@@ -7,8 +7,12 @@
 ## Sync
 
 - [ ] Get kubeconfig files using http(s)
-- [ ] Get kubeconfig with glob pattern
-- [ ] Add arguments to append a kubeconfig file to an existing config
+- [x] Get kubeconfig with glob pattern
+- [x] Add arguments to append a kubeconfig file to an existing config
+
+## kubeconfig
+
+- [ ] Edit a context
 
 ## Prompt
 

@@ -3,6 +3,7 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 
 	"github.com/mqllr/kubenv/pkg/config"
 	"github.com/mqllr/kubenv/pkg/k8s"
@@ -23,7 +24,12 @@ func showClusterCmd() *cobra.Command {
 }
 
 func showCluster(args []string) {
-	kubeconfig, err := k8s.NewKubeConfigFromFile(config.GetKubeConfig())
+	f, err := os.Open(config.GetKubeConfig())
+	if err != nil {
+		klog.Fatalf("Cannot open the kube config: %s", err)
+	}
+
+	kubeconfig, err := k8s.NewKubeConfigFromReader(f)
 	if err != nil {
 		klog.Fatalf("Cannot load the kubeconfig file: %s", err)
 	}

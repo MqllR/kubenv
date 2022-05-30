@@ -30,26 +30,6 @@ func NewKubeConfig() *KubeConfig {
 	}
 }
 
-// NewKubeConfigFromFile creates a new struct KubeConfig from a file
-func NewKubeConfigFromFile(kubeconfig string) (*KubeConfig, error) {
-	if _, err := os.Stat(kubeconfig); os.IsNotExist(err) {
-		return nil, fmt.Errorf("File doesn't exist: %s", err)
-	}
-
-	content, err := ioutil.ReadFile(kubeconfig)
-	if err != nil {
-		return nil, fmt.Errorf("Error when reading kubeconfig file: %s", err)
-	}
-
-	k := NewKubeConfig()
-
-	if err = k.unmarshal(content); err != nil {
-		return nil, fmt.Errorf("Can't unmarshal the kubeconfig file: %s", err)
-	}
-
-	return k, nil
-}
-
 // NewKubeConfigFromReader creates a new struct KubeConfig from an io.Reader
 func NewKubeConfigFromReader(r io.Reader) (*KubeConfig, error) {
 	content, err := ioutil.ReadAll(r)
