@@ -18,7 +18,7 @@ func TestGetKubeConfig(t *testing.T) {
 		expected string
 	}{
 		"with env":    {"/foo/bar", "/foo/bar"},
-		"without env": {"", "/home/foo"},
+		"without env": {"", "/home/foo/.kube/config"},
 	}
 
 	for name, test := range testCases {
