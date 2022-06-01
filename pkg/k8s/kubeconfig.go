@@ -46,20 +46,21 @@ func NewKubeConfigFromReader(r io.Reader) (*KubeConfig, error) {
 	return k, nil
 }
 
-// WriteFile writes the kubeconfig in the given file
-func (kubeConfig *KubeConfig) WriteFile(file string) error {
+// Save writes the kubeconfig in the given file
+func (kubeConfig *KubeConfig) Save(w io.Writer) error {
 	config, err := kubeConfig.marshal()
 	if err != nil {
 		return nil
 	}
 
-	return ioutil.WriteFile(file, config, 0600)
+	_, err = w.Write(config)
+	return err
 }
 
 // WriteTempFile writes the kubeconfig in a temporary file
 // returns the temporary file path
 func (kubeConfig *KubeConfig) WriteTempFile() (string, error) {
-	temp, err := ioutil.TempFile("/tmp", "kubeconfig-*")
+	temp, err := os.CreateTemp("/tmp", "kubeconfig-*")
 	if err != nil {
 		return "", fmt.Errorf("Cannot create a temporary file %s", err)
 	}
