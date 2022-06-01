@@ -80,7 +80,13 @@ func runSync(opts *sync.SyncOptions) error {
 
 	baseKubeConfig.Append(kubeconfig)
 
-	err = baseKubeConfig.WriteFile(config.GetKubeConfig())
+	fh, err := os.OpenFile(config.GetKubeConfig(), os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0600)
+	if err != nil {
+		return fmt.Errorf("Cannot open the kubeconfig: %s", err)
+	}
+	defer fh.Close()
+
+	err = baseKubeConfig.Save(fh)
 	if err != nil {
 		fmt.Printf("%v Failed to write the kubeconfig file: %s", promptui.IconBad, err)
 	}

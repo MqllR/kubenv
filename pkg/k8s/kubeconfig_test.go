@@ -1,10 +1,8 @@
 package k8s_test
 
 import (
+	"bytes"
 	"fmt"
-	"math/rand"
-	"os"
-	"path/filepath"
 	"reflect"
 	"strings"
 	"testing"
@@ -148,37 +146,17 @@ func TestGetClusterByContextName(t *testing.T) {
 	}
 }
 
-func TestWriteFile(t *testing.T) {
+func TestSaveFile(t *testing.T) {
 	kubeconfig, err := loadKubeConfig()
 	if err != nil {
 		t.Error(err)
 	}
 
-	const letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	buf := new(bytes.Buffer)
 
-	randString := func(n int) string {
-		b := make([]byte, n)
-		for i := range b {
-			b[i] = letterBytes[rand.Intn(len(letterBytes))]
-		}
-		return string(b)
-	}
-
-	filename := filepath.Join("/tmp", fmt.Sprintf("kubeconfig-test-%s", randString(5)))
-	defer os.Remove(filename)
-
-	err = kubeconfig.WriteFile(filename)
+	err = kubeconfig.Save(buf)
 	if err != nil {
 		t.Errorf("Writing test file error: %s", err)
-	}
-
-	info, err := os.Stat(filename)
-	if err != nil {
-		t.Errorf("Getting stat on test file error: %s", err)
-	}
-
-	if info.Mode() != 0600 {
-		t.Errorf("Bad file mode: %v expected %v", info.Mode(), 0600)
 	}
 }
 
