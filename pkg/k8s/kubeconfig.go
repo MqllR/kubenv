@@ -171,6 +171,40 @@ func (kubeConfig *KubeConfig) GetUserByContextName(context string) (*User, error
 	return nil, fmt.Errorf("User not found for the context %s", context)
 }
 
+// GetKubeConfigByContextName returns a KubeConfig
+func (kubeConfig *KubeConfig) GetKubeConfigByContextName(context string) (*KubeConfig, error) {
+	k := &KubeConfig{}
+
+	ctx, err := kubeConfig.GetContextByContextName(context)
+	if err != nil {
+		return nil, err
+	}
+
+	k.Contexts = []*ContextWithName{
+		{Context: ctx, Name: context},
+	}
+
+	user, err := kubeConfig.GetUserByContextName(context)
+	if err != nil {
+		return nil, err
+	}
+
+	k.Users = []*UserWithName{
+		{User: user, Name: context},
+	}
+
+	cluster, err := kubeConfig.GetClusterByContextName(context)
+	if err != nil {
+		return nil, err
+	}
+
+	k.Clusters = []*ClusterWithName{
+		{Cluster: cluster, Name: context},
+	}
+
+	return k, nil
+}
+
 // ExecCommand executes any kind of command for a selected context
 // this will write a temporary kubeconfig file in /tmp.
 func (kubeConfig *KubeConfig) ExecCommand(context string, cmd []string) error {
