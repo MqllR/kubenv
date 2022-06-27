@@ -37,18 +37,7 @@ users:
       - fakecluster
       command: aws-iam-authenticator
 `
-	testingConfigStruct = &k8s.KubeConfig{
-		APIVersion: "v1",
-		Clusters: []*k8s.ClusterWithName{
-			{
-				Name: "toto",
-				Cluster: &k8s.Cluster{
-					CertificatAuthorityData: "FAKEVALUE",
-					Server:                  "https://fakeurl.com",
-				},
-			},
-		},
-	}
+
 	testingBigConfig = `
 apiVersion: v1
 clusters:
@@ -93,6 +82,43 @@ users:
       - fakecluster
       command: aws-iam-authenticator
 `
+
+	testingConfigStruct = &k8s.KubeConfig{
+		APIVersion:  "v1",
+		Kind:        "Config",
+		Preferences: map[string]interface{}{},
+		Clusters: []*k8s.ClusterWithName{
+			{
+				Name: "fakecluster",
+				Cluster: &k8s.Cluster{
+					CertificatAuthorityData: "FAKEVALUE",
+					Server:                  "https://fakeurl.com",
+				},
+			},
+		},
+		Contexts: []*k8s.ContextWithName{
+			{
+				Name: "fakecontext",
+				Context: &k8s.Context{
+					Cluster:   "fakecluster",
+					Namespace: "fakens",
+					User:      "fakeuser",
+				},
+			},
+		},
+		Users: []*k8s.UserWithName{
+			{
+				Name: "fakeuser",
+				User: &k8s.User{
+					Exec: &k8s.Exec{
+						APIVersion: "client.authentication.k8s.io/v1alpha1",
+						Args:       []string{"token", "-i", "fakecluster"},
+						Command:    "aws-iam-authenticator",
+					},
+				},
+			},
+		},
+	}
 )
 
 func TestNewKubeConfig(t *testing.T) {

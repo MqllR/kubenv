@@ -173,7 +173,7 @@ func (kubeConfig *KubeConfig) GetUserByContextName(context string) (*User, error
 
 // GetKubeConfigByContextName returns a KubeConfig
 func (kubeConfig *KubeConfig) GetKubeConfigByContextName(context string) (*KubeConfig, error) {
-	k := &KubeConfig{}
+	k := NewKubeConfig()
 
 	ctx, err := kubeConfig.GetContextByContextName(context)
 	if err != nil {
@@ -190,7 +190,7 @@ func (kubeConfig *KubeConfig) GetKubeConfigByContextName(context string) (*KubeC
 	}
 
 	k.Users = []*UserWithName{
-		{User: user, Name: context},
+		{User: user, Name: ctx.User},
 	}
 
 	cluster, err := kubeConfig.GetClusterByContextName(context)
@@ -199,7 +199,7 @@ func (kubeConfig *KubeConfig) GetKubeConfigByContextName(context string) (*KubeC
 	}
 
 	k.Clusters = []*ClusterWithName{
-		{Cluster: cluster, Name: context},
+		{Cluster: cluster, Name: ctx.Cluster},
 	}
 
 	return k, nil
