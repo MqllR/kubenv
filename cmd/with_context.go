@@ -1,15 +1,12 @@
 package cmd
 
 import (
-	"os"
 	"sort"
 
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 	"k8s.io/klog"
 
-	"github.com/mqllr/kubenv/pkg/config"
-	"github.com/mqllr/kubenv/pkg/k8s"
 	"github.com/mqllr/kubenv/pkg/prompt"
 )
 
@@ -28,16 +25,7 @@ func withContextCmd() *cobra.Command {
 
 // with-context command
 func withContext(args []string) {
-	f, err := os.Open(config.GetKubeConfig())
-	if err != nil {
-		klog.Fatalf("Cannot open the kube config: %s", err)
-	}
-
-	c, err := k8s.NewKubeConfigFromReader(f)
-	if err != nil {
-		klog.Fatalf("Error when loading kubeconfig file: %s", err)
-	}
-	contexts := c.GetContextNames()
+	contexts := kubeconfig.GetContextNames()
 	sort.Strings(contexts)
 
 	klog.V(5).Infof("List of contexts: %v", contexts)
@@ -50,7 +38,7 @@ func withContext(args []string) {
 
 	for _, context := range selectedContexts {
 		color.Green("-> Context %s\n", context)
-		err := c.ExecCommand(context, args)
+		err := kubeconfig.ExecCommand(context, args)
 		if err != nil {
 			klog.Errorf("Cmd error: %s", err)
 		}

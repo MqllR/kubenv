@@ -1,14 +1,12 @@
 package cmd
 
 import (
-	"os"
 	"sort"
 
 	"github.com/spf13/cobra"
 	"k8s.io/klog"
 
-	"github.com/mqllr/kubenv/pkg/config"
-	"github.com/mqllr/kubenv/pkg/k8s"
+	"github.com/mqllr/kubenv/cmd/helpers"
 	"github.com/mqllr/kubenv/pkg/prompt"
 )
 
@@ -36,16 +34,6 @@ func useContextCmd() *cobra.Command {
 
 // use-context command
 func useContext(opts *useContextOptions) {
-	f, err := os.Open(config.GetKubeConfig())
-	if err != nil {
-		klog.Fatalf("Cannot open the kube config: %s", err)
-	}
-
-	kubeconfig, err := k8s.NewKubeConfigFromReader(f)
-	if err != nil {
-		klog.Fatalf("Cannot load kubeconfig file: %s", err)
-	}
-
 	contexts := kubeconfig.GetContextNames()
 
 	var selectedContext string
@@ -59,24 +47,19 @@ func useContext(opts *useContextOptions) {
 		sort.Strings(contexts)
 
 		p := prompt.NewPrompt("Select the context", contexts)
+		var err error
 		selectedContext, err = p.PromptSelect()
 		if err != nil {
 			klog.Fatalf("Cannot get the answer from the prompt: %s", err)
 		}
 	}
 
-	err = kubeconfig.SetCurrentContext(selectedContext)
+	err := kubeconfig.SetCurrentContext(selectedContext)
 	if err != nil {
 		klog.Fatalf("Cannot set the current context %s: %s", selectedContext, err)
 	}
 
-	fh, err := os.OpenFile(config.GetKubeConfig(), os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0600)
-	if err != nil {
-		klog.Fatalf("Cannot open the kubeconfig: %s", err)
-	}
-	defer fh.Close()
-
-	err = kubeconfig.Save(fh)
+	err = helpers.SaveKubeConfig(kubeconfig)
 	if err != nil {
 		klog.Fatalf("Cannot write the kubeconfig file: %s", err)
 	}

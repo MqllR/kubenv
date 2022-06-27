@@ -1,6 +1,7 @@
 ## K8S
 
 - [ ] Backup / restore kubeconfig when running the sync command
+- [ ] Validate kubeconfig
 - [ ] Switch between namespaces
 - [x] Run command across mutliple clusters
 
@@ -12,8 +13,12 @@
 
 ## kubeconfig
 
-- [ ] Edit a context
+- [x] Edit a context
 
 ## Prompt
 
 - [x] Migrate to https://github.com/AlecAivazis/survey for multi select
+
+## Package
+
+- [ ] Publish on krew

@@ -4,13 +4,24 @@ import (
 	goflag "flag"
 	"fmt"
 
+	"github.com/mqllr/kubenv/cmd/helpers"
+	"github.com/mqllr/kubenv/pkg/k8s"
 	"github.com/spf13/cobra"
 	"k8s.io/klog"
 )
 
 var (
+	kubeconfig *k8s.KubeConfig
+
 	rootCmd = &cobra.Command{
-		Use:   "kubenv",
+		Use: "kubenv",
+		PersistentPreRun: func(cmd *cobra.Command, args []string) {
+			var err error
+			kubeconfig, err = helpers.NewKubeConfig()
+			if err != nil {
+				klog.Fatalf("Cannot load the kubeconfig: %s", err)
+			}
+		},
 		Short: "A tool to manage multiple Kube cluster",
 	}
 )
@@ -48,4 +59,7 @@ func init() {
 	s.AddCommand(showClusterCmd())
 
 	rootCmd.AddCommand(s)
+
+	// edit cmd
+	rootCmd.AddCommand(editCmd())
 }

@@ -10,7 +10,8 @@ import (
 	"github.com/mqllr/kubenv/pkg/k8s"
 )
 
-var testingConfig = `
+var (
+	testingConfig = `
 apiVersion: v1
 clusters:
 - cluster:
@@ -37,6 +38,89 @@ users:
       command: aws-iam-authenticator
 `
 
+	testingBigConfig = `
+apiVersion: v1
+clusters:
+- cluster:
+    certificate-authority-data: FAKEVALUE2
+    server: https://fakeurl2.com
+  name: fakecluster2
+- cluster:
+    certificate-authority-data: FAKEVALUE
+    server: https://fakeurl.com
+  name: fakecluster
+contexts:
+- context:
+    cluster: fakecluster2
+    namespace: fakens2
+    user: fakeuser2
+  name: fakecontext2
+- context:
+    cluster: fakecluster
+    namespace: fakens
+    user: fakeuser
+  name: fakecontext
+kind: Config
+preferences: {}
+users:
+- name: fakeuser2
+  user:
+    exec:
+      apiVersion: client.authentication.k8s.io/v1alpha1
+      args:
+      - token
+      - -i
+      - fakecluster2
+      command: aws-iam-authenticator
+- name: fakeuser
+  user:
+    exec:
+      apiVersion: client.authentication.k8s.io/v1alpha1
+      args:
+      - token
+      - -i
+      - fakecluster
+      command: aws-iam-authenticator
+`
+
+	testingConfigStruct = &k8s.KubeConfig{
+		APIVersion:  "v1",
+		Kind:        "Config",
+		Preferences: map[string]interface{}{},
+		Clusters: []*k8s.ClusterWithName{
+			{
+				Name: "fakecluster",
+				Cluster: &k8s.Cluster{
+					CertificatAuthorityData: "FAKEVALUE",
+					Server:                  "https://fakeurl.com",
+				},
+			},
+		},
+		Contexts: []*k8s.ContextWithName{
+			{
+				Name: "fakecontext",
+				Context: &k8s.Context{
+					Cluster:   "fakecluster",
+					Namespace: "fakens",
+					User:      "fakeuser",
+				},
+			},
+		},
+		Users: []*k8s.UserWithName{
+			{
+				Name: "fakeuser",
+				User: &k8s.User{
+					Exec: &k8s.Exec{
+						APIVersion: "client.authentication.k8s.io/v1alpha1",
+						Args:       []string{"token", "-i", "fakecluster"},
+						Command:    "aws-iam-authenticator",
+					},
+				},
+			},
+		},
+	}
+)
+
 func TestNewKubeConfig(t *testing.T) {
 	kubeconfig := k8s.NewKubeConfig()
 
@@ -50,8 +134,7 @@ func TestNewKubeConfig(t *testing.T) {
 }
 
 func TestNewKubeConfigFromReader(t *testing.T) {
-	r := strings.NewReader(testingConfig)
-	kubeconfig, err := k8s.NewKubeConfigFromReader(r)
+	kubeconfig, err := loadKubeConfig(testingConfig)
 
 	if err != nil {
 		t.Errorf("Unexpeted err: %s", err)
@@ -81,7 +164,7 @@ var (
 )
 
 func TestGetContextByContextName(t *testing.T) {
-	kubeconfig, err := loadKubeConfig()
+	kubeconfig, err := loadKubeConfig(testingConfig)
 	if err != nil {
 		t.Error(err)
 	}
@@ -103,7 +186,7 @@ func TestGetContextByContextName(t *testing.T) {
 }
 
 func TestGetUserByContextName(t *testing.T) {
-	kubeconfig, err := loadKubeConfig()
+	kubeconfig, err := loadKubeConfig(testingConfig)
 	if err != nil {
 		t.Error(err)
 	}
@@ -125,7 +208,7 @@ func TestGetUserByContextName(t *testing.T) {
 }
 
 func TestGetClusterByContextName(t *testing.T) {
-	kubeconfig, err := loadKubeConfig()
+	kubeconfig, err := loadKubeConfig(testingConfig)
 	if err != nil {
 		t.Error(err)
 	}
@@ -146,8 +229,30 @@ func TestGetClusterByContextName(t *testing.T) {
 	}
 }
 
+func TestGetKubeConfigByContextName(t *testing.T) {
+	kubeconfig, err := loadKubeConfig(testingBigConfig)
+	if err != nil {
+		t.Error(err)
+	}
+
+	for _, test := range testSuitesGetByName {
+		k, err := kubeconfig.GetKubeConfigByContextName(test.context)
+		if err != nil && !test.errExpected {
+			t.Errorf("Got an error %s, but this wasn't expected", err.Error())
+		}
+
+		if test.errExpected {
+			continue
+		}
+
+		if !reflect.DeepEqual(k, testingConfigStruct) {
+			t.Error("Cluster returned doesn't match with the original kubeconfig")
+		}
+	}
+}
+
 func TestSaveFile(t *testing.T) {
-	kubeconfig, err := loadKubeConfig()
+	kubeconfig, err := loadKubeConfig(testingConfig)
 	if err != nil {
 		t.Error(err)
 	}
@@ -160,8 +265,8 @@ func TestSaveFile(t *testing.T) {
 	}
 }
 
-func loadKubeConfig() (*k8s.KubeConfig, error) {
-	r := strings.NewReader(testingConfig)
+func loadKubeConfig(kubeConfig string) (*k8s.KubeConfig, error) {
+	r := strings.NewReader(kubeConfig)
 	kubeconfig, err := k8s.NewKubeConfigFromReader(r)
 	if err != nil {
 		return nil, fmt.Errorf("Error when trying to unmarsh the test config: %s", err)

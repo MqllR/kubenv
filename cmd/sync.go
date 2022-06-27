@@ -2,12 +2,11 @@ package cmd
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
-	"k8s.io/klog"
 
+	"github.com/mqllr/kubenv/cmd/helpers"
 	"github.com/mqllr/kubenv/pkg/config"
 	"github.com/mqllr/kubenv/pkg/k8s"
 	"github.com/mqllr/kubenv/pkg/sync"
@@ -61,15 +60,7 @@ func runSync(opts *sync.SyncOptions) error {
 	var err error
 
 	if opts.AppendTo {
-		f, err := os.Open(config.GetKubeConfig())
-		if err != nil {
-			klog.Fatalf("Cannot open the kube config: %s", err)
-		}
-
-		baseKubeConfig, err = k8s.NewKubeConfigFromReader(f)
-		if err != nil {
-			return fmt.Errorf("Something went wrong: %s", err)
-		}
+		baseKubeConfig = kubeconfig
 	}
 
 	svc := sync.NewService(opts)
@@ -80,13 +71,7 @@ func runSync(opts *sync.SyncOptions) error {
 
 	baseKubeConfig.Append(kubeconfig)
 
-	fh, err := os.OpenFile(config.GetKubeConfig(), os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0600)
-	if err != nil {
-		return fmt.Errorf("Cannot open the kubeconfig: %s", err)
-	}
-	defer fh.Close()
-
-	err = baseKubeConfig.Save(fh)
+	err = helpers.SaveKubeConfig(baseKubeConfig)
 	if err != nil {
 		fmt.Printf("%v Failed to write the kubeconfig file: %s", promptui.IconBad, err)
 	}
