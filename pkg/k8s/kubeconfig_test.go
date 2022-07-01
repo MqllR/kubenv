@@ -11,7 +11,7 @@ import (
 )
 
 var (
-	testingConfig = `
+	testingConfig1 = `
 apiVersion: v1
 clusters:
 - cluster:
@@ -38,7 +38,34 @@ users:
       command: aws-iam-authenticator
 `
 
-	testingBigConfig = `
+	testingConfig2 = `
+apiVersion: v1
+clusters:
+- cluster:
+    certificate-authority-data: FAKEVALUE2
+    server: https://fakeurl2.com
+  name: fakecluster2
+contexts:
+- context:
+    cluster: fakecluster2
+    namespace: fakens2
+    user: fakeuser2
+  name: fakecontext2
+kind: Config
+preferences: {}
+users:
+- name: fakeuser2
+  user:
+    exec:
+      apiVersion: client.authentication.k8s.io/v1alpha1
+      args:
+      - token
+      - -i
+      - fakecluster2
+      command: aws-iam-authenticator
+`
+
+	testingMergedConfig = `
 apiVersion: v1
 clusters:
 - cluster:
@@ -134,7 +161,7 @@ func TestNewKubeConfig(t *testing.T) {
 }
 
 func TestNewKubeConfigFromReader(t *testing.T) {
-	kubeconfig, err := loadKubeConfig(testingConfig)
+	kubeconfig, err := loadKubeConfig(testingConfig1)
 
 	if err != nil {
 		t.Errorf("Unexpeted err: %s", err)
@@ -164,7 +191,7 @@ var (
 )
 
 func TestGetContextByContextName(t *testing.T) {
-	kubeconfig, err := loadKubeConfig(testingConfig)
+	kubeconfig, err := loadKubeConfig(testingConfig1)
 	if err != nil {
 		t.Error(err)
 	}
@@ -186,7 +213,7 @@ func TestGetContextByContextName(t *testing.T) {
 }
 
 func TestGetUserByContextName(t *testing.T) {
-	kubeconfig, err := loadKubeConfig(testingConfig)
+	kubeconfig, err := loadKubeConfig(testingConfig1)
 	if err != nil {
 		t.Error(err)
 	}
@@ -208,7 +235,7 @@ func TestGetUserByContextName(t *testing.T) {
 }
 
 func TestGetClusterByContextName(t *testing.T) {
-	kubeconfig, err := loadKubeConfig(testingConfig)
+	kubeconfig, err := loadKubeConfig(testingConfig1)
 	if err != nil {
 		t.Error(err)
 	}
@@ -230,7 +257,7 @@ func TestGetClusterByContextName(t *testing.T) {
 }
 
 func TestGetKubeConfigByContextName(t *testing.T) {
-	kubeconfig, err := loadKubeConfig(testingBigConfig)
+	kubeconfig, err := loadKubeConfig(testingMergedConfig)
 	if err != nil {
 		t.Error(err)
 	}
@@ -252,7 +279,7 @@ func TestGetKubeConfigByContextName(t *testing.T) {
 }
 
 func TestSaveFile(t *testing.T) {
-	kubeconfig, err := loadKubeConfig(testingConfig)
+	kubeconfig, err := loadKubeConfig(testingConfig1)
 	if err != nil {
 		t.Error(err)
 	}
@@ -262,6 +289,28 @@ func TestSaveFile(t *testing.T) {
 	err = kubeconfig.Save(buf)
 	if err != nil {
 		t.Errorf("Writing test file error: %s", err)
+	}
+}
+
+func TestAppend(t *testing.T) {
+	kubeconfig1, err := loadKubeConfig(testingConfig1)
+	if err != nil {
+		t.Error(err)
+	}
+
+	kubeconfig2, err := loadKubeConfig(testingConfig2)
+	if err != nil {
+		t.Error(err)
+	}
+
+	kubeconfigMerged, err := loadKubeConfig(testingMergedConfig)
+	if err != nil {
+		t.Error(err)
+	}
+
+	kubeconfig2.Append(kubeconfig1)
+	if !reflect.DeepEqual(kubeconfig2, kubeconfigMerged) {
+		t.Error("kubeconfig1 not equal the merged kubeconfig")
 	}
 }
 

@@ -48,13 +48,7 @@ func NewKubeConfigFromReader(r io.Reader) (*KubeConfig, error) {
 
 // Save writes the kubeconfig in the given file
 func (kubeConfig *KubeConfig) Save(w io.Writer) error {
-	config, err := kubeConfig.marshal()
-	if err != nil {
-		return nil
-	}
-
-	_, err = w.Write(config)
-	return err
+	return yaml.NewEncoder(w).Encode(kubeConfig)
 }
 
 // WriteTempFile writes the kubeconfig in a temporary file
