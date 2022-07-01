@@ -37,6 +37,7 @@ func useContext(opts *useContextOptions) {
 	contexts := kubeconfig.GetContextNames()
 
 	var selectedContext string
+	var err error
 
 	if opts.context != "" {
 		if !kubeconfig.IsContextExist(opts.context) {
@@ -47,14 +48,13 @@ func useContext(opts *useContextOptions) {
 		sort.Strings(contexts)
 
 		p := prompt.NewPrompt("Select the context", contexts)
-		var err error
 		selectedContext, err = p.PromptSelect()
 		if err != nil {
 			klog.Fatalf("Cannot get the answer from the prompt: %s", err)
 		}
 	}
 
-	err := kubeconfig.SetCurrentContext(selectedContext)
+	err = kubeconfig.SetCurrentContext(selectedContext)
 	if err != nil {
 		klog.Fatalf("Cannot set the current context %s: %s", selectedContext, err)
 	}
