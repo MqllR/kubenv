@@ -65,6 +65,33 @@ users:
       command: aws-iam-authenticator
 `
 
+	testingBadConfig1 = `
+apiVersion: v1
+clusters:
+- cluster:
+    certificate-authority-data: FAKEVALUE2
+    server: https://fakeurl2.com
+  name: fake1
+contexts:
+- context:
+    cluster: fakecluster1
+    namespace: fakens1
+    user: fakeuser1
+  name: fakecontext1
+kind: Config
+preferences: {}
+users:
+- name: fake1
+  user:
+    exec:
+      apiVersion: client.authentication.k8s.io/v1alpha1
+      args:
+      - token
+      - -i
+      - fakecluster2
+      command: aws-iam-authenticator
+`
+
 	testingMergedConfig = `
 apiVersion: v1
 clusters:
@@ -279,16 +306,26 @@ func TestGetKubeConfigByContextName(t *testing.T) {
 }
 
 func TestSaveFile(t *testing.T) {
-	kubeconfig, err := loadKubeConfig(testingConfig1)
-	if err != nil {
-		t.Error(err)
+	testSuites := []struct {
+		kubeconfig  string
+		errExpected bool
+	}{
+		{testingConfig1, false},
+		{testingBadConfig1, true},
 	}
 
-	buf := new(bytes.Buffer)
+	for _, test := range testSuites {
+		kubeconfig, err := loadKubeConfig(test.kubeconfig)
+		if err != nil {
+			t.Error(err)
+		}
 
-	err = kubeconfig.Save(buf)
-	if err != nil {
-		t.Errorf("Writing test file error: %s", err)
+		buf := new(bytes.Buffer)
+
+		err = kubeconfig.Save(buf)
+		if err != nil && !test.errExpected {
+			t.Errorf("Got an error %s, but this wasn't expected", err.Error())
+		}
 	}
 }
 

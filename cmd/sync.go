@@ -64,7 +64,7 @@ func runSync(opts *sync.SyncOptions) error {
 	}
 
 	svc := sync.NewService(opts)
-	kubeconfig, err := svc.GetKubeConfig()
+	kubeconfig, err := svc.RetrieveKubeConfig()
 	if err != nil {
 		return fmt.Errorf("Cannot retrieve the kubeconfig: %s", err)
 	}

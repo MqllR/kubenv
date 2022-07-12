@@ -71,6 +71,10 @@ func editContext(args []string) {
 	}
 
 	newKubeconfig.Append(k)
+	err = newKubeconfig.SetCurrentContext(k.GetContextNames()[0])
+	if err != nil {
+		klog.Fatalf("Cannot set the current-context: %s", err)
+	}
 
 	err = helpers.SaveKubeConfig(newKubeconfig)
 	if err != nil {

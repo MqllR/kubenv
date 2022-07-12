@@ -53,6 +53,6 @@ func NewService(opts *SyncOptions) *Service {
 }
 
 // GetKubeConfig retrieve a kubeconfig using a sync mode
-func (s *Service) GetKubeConfig() (*k8s.KubeConfig, error) {
+func (s *Service) RetrieveKubeConfig() (*k8s.KubeConfig, error) {
 	return s.s.GetKubeConfig()
 }

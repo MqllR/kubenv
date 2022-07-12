@@ -47,13 +47,18 @@ func NewKubeConfigFromReader(r io.Reader) (*KubeConfig, error) {
 }
 
 // Save writes the kubeconfig in the given file
-func (kubeConfig *KubeConfig) Save(w io.Writer) error {
-	return yaml.NewEncoder(w).Encode(kubeConfig)
+func (k *KubeConfig) Save(w io.Writer) error {
+	err := k.validate()
+	if err != nil {
+		return fmt.Errorf("Failed to validate the kubeconfig: %s", err)
+	}
+
+	return yaml.NewEncoder(w).Encode(k)
 }
 
 // WriteTempFile writes the kubeconfig in a temporary file
 // returns the temporary file path
-func (kubeConfig *KubeConfig) WriteTempFile() (string, error) {
+func (k *KubeConfig) WriteTempFile() (string, error) {
 	temp, err := os.CreateTemp("/tmp", "kubeconfig-*")
 	if err != nil {
 		return "", fmt.Errorf("Cannot create a temporary file %s", err)
@@ -62,7 +67,7 @@ func (kubeConfig *KubeConfig) WriteTempFile() (string, error) {
 	tempKubeConfig := temp.Name()
 	defer temp.Close()
 
-	data, err := kubeConfig.marshal()
+	data, err := k.marshal()
 	if err != nil {
 		return "", fmt.Errorf("Unable to marshal kubeconfig: %s", err)
 	}
@@ -76,16 +81,16 @@ func (kubeConfig *KubeConfig) WriteTempFile() (string, error) {
 }
 
 // Append merges 2 KubeConfig struct in one.
-func (kubeConfig *KubeConfig) Append(config *KubeConfig) {
-	kubeConfig.Clusters = append(kubeConfig.Clusters, config.Clusters...)
-	kubeConfig.Contexts = append(kubeConfig.Contexts, config.Contexts...)
-	kubeConfig.Users = append(kubeConfig.Users, config.Users...)
+func (k *KubeConfig) Append(config *KubeConfig) {
+	k.Clusters = append(k.Clusters, config.Clusters...)
+	k.Contexts = append(k.Contexts, config.Contexts...)
+	k.Users = append(k.Users, config.Users...)
 }
 
 // GetContextNames returns a list of all the context names
-func (kubeConfig *KubeConfig) GetContextNames() []string {
+func (k *KubeConfig) GetContextNames() []string {
 	var contexts []string
-	for _, context := range kubeConfig.Contexts {
+	for _, context := range k.Contexts {
 		contexts = append(contexts, context.Name)
 	}
 
@@ -93,13 +98,13 @@ func (kubeConfig *KubeConfig) GetContextNames() []string {
 }
 
 // ToString converts a KubeConfig in a string
-func (kubeConfig *KubeConfig) ToString() (string, error) {
-	config, err := kubeConfig.marshal()
+func (k *KubeConfig) ToString() (string, error) {
+	config, err := k.marshal()
 	return string(config), err
 }
 
 // IsContextExist checks if a given context exist in the KubeConfig
-func (kubeConfig *KubeConfig) IsContextExist(context string) bool {
+func (k *KubeConfig) IsContextExist(context string) bool {
 	exist := func(slice []string, item string) bool {
 		for _, s := range slice {
 			if item == s {
@@ -109,22 +114,22 @@ func (kubeConfig *KubeConfig) IsContextExist(context string) bool {
 		return false
 	}
 
-	return exist(kubeConfig.GetContextNames(), context)
+	return exist(k.GetContextNames(), context)
 }
 
 // SetCurrentContext just set the given context to CurrentContext
-func (kubeConfig *KubeConfig) SetCurrentContext(context string) error {
-	if !kubeConfig.IsContextExist(context) {
+func (k *KubeConfig) SetCurrentContext(context string) error {
+	if !k.IsContextExist(context) {
 		return fmt.Errorf("Context %s doesn't exist in kubeconfig file", context)
 	}
 
-	kubeConfig.CurrentContext = context
+	k.CurrentContext = context
 	return nil
 }
 
 // GetContextByContextName returns a Context from its name
-func (kubeConfig *KubeConfig) GetContextByContextName(context string) (*Context, error) {
-	for _, ctx := range kubeConfig.Contexts {
+func (k *KubeConfig) GetContextByContextName(context string) (*Context, error) {
+	for _, ctx := range k.Contexts {
 		if ctx.Name == context {
 			return ctx.Context, nil
 		}
@@ -134,13 +139,13 @@ func (kubeConfig *KubeConfig) GetContextByContextName(context string) (*Context,
 }
 
 // GetClusterByContextName returns a Cluster from the context name
-func (kubeConfig *KubeConfig) GetClusterByContextName(context string) (*Cluster, error) {
-	ctx, err := kubeConfig.GetContextByContextName(context)
+func (k *KubeConfig) GetClusterByContextName(context string) (*Cluster, error) {
+	ctx, err := k.GetContextByContextName(context)
 	if err != nil {
 		return nil, err
 	}
 
-	for _, cluster := range kubeConfig.Clusters {
+	for _, cluster := range k.Clusters {
 		if cluster.Name == ctx.Cluster {
 			return cluster.Cluster, nil
 		}
@@ -150,13 +155,13 @@ func (kubeConfig *KubeConfig) GetClusterByContextName(context string) (*Cluster,
 }
 
 // GetUserByContextName returns a Users from the context name
-func (kubeConfig *KubeConfig) GetUserByContextName(context string) (*User, error) {
-	ctx, err := kubeConfig.GetContextByContextName(context)
+func (k *KubeConfig) GetUserByContextName(context string) (*User, error) {
+	ctx, err := k.GetContextByContextName(context)
 	if err != nil {
 		return nil, err
 	}
 
-	for _, user := range kubeConfig.Users {
+	for _, user := range k.Users {
 		if user.Name == ctx.User {
 			return user.User, nil
 		}
@@ -201,13 +206,13 @@ func (kubeConfig *KubeConfig) GetKubeConfigByContextName(context string) (*KubeC
 
 // ExecCommand executes any kind of command for a selected context
 // this will write a temporary kubeconfig file in /tmp.
-func (kubeConfig *KubeConfig) ExecCommand(context string, cmd []string) error {
-	err := kubeConfig.SetCurrentContext(context)
+func (k *KubeConfig) ExecCommand(context string, cmd []string) error {
+	err := k.SetCurrentContext(context)
 	if err != nil {
 		return fmt.Errorf("Error when settings the context: %s", err)
 	}
 
-	tempKubeConfig, err := kubeConfig.WriteTempFile()
+	tempKubeConfig, err := k.WriteTempFile()
 	if err != nil {
 		return fmt.Errorf("Error when creating the temporary kubeconfig file: %s", err)
 	}
@@ -256,8 +261,8 @@ func (kubeConfig *KubeConfig) ExecCommand(context string, cmd []string) error {
 }
 
 // unmarshal fills a kubeConfig struct with yaml.Unmarshal
-func (kubeConfig *KubeConfig) unmarshal(config []byte) error {
-	err := yaml.Unmarshal(config, kubeConfig)
+func (k *KubeConfig) unmarshal(config []byte) error {
+	err := yaml.Unmarshal(config, k)
 	if err != nil {
 		return err
 	}
@@ -266,6 +271,21 @@ func (kubeConfig *KubeConfig) unmarshal(config []byte) error {
 }
 
 // marshal converts to []byte a KubeConfig
-func (kubeConfig *KubeConfig) marshal() ([]byte, error) {
-	return yaml.Marshal(&kubeConfig)
+func (k *KubeConfig) marshal() ([]byte, error) {
+	return yaml.Marshal(&k)
+}
+
+// marshal converts to []byte a KubeConfig
+func (k *KubeConfig) validate() error {
+	for _, context := range k.GetContextNames() {
+		_, err := k.GetClusterByContextName(context)
+		if err != nil {
+			return fmt.Errorf("Cannot retrieve the cluster using the context %s: %s", context, err)
+		}
+		_, err = k.GetUserByContextName(context)
+		if err != nil {
+			return fmt.Errorf("Cannot retrieve the user using the context %s: %s", context, err)
+		}
+	}
+	return nil
 }
