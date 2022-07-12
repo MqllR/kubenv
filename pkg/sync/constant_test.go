@@ -27,6 +27,7 @@ users:
       - fakecluster
       command: aws-iam-authenticator
 `
+
 	kubeconfig2 = `
 apiVersion: v1
 clusters:
