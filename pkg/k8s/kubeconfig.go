@@ -7,6 +7,8 @@ import (
 	"os"
 	"os/exec"
 
+	"github.com/mqllr/kubenv/pkg/config"
+	"github.com/mqllr/kubenv/pkg/saver"
 	"gopkg.in/yaml.v2"
 )
 
@@ -47,13 +49,51 @@ func NewKubeConfigFromReader(r io.Reader) (*KubeConfig, error) {
 }
 
 // Save writes the kubeconfig in the given file
-func (k *KubeConfig) Save(w io.Writer) error {
+func (k *KubeConfig) Save() error {
 	err := k.validate()
 	if err != nil {
 		return fmt.Errorf("Failed to validate the kubeconfig: %s", err)
 	}
 
-	return yaml.NewEncoder(w).Encode(k)
+	gen, err := saver.NewGenerator("")
+	if err != nil {
+		return fmt.Errorf("Cannot generate a filename: %s", err)
+	}
+	s := saver.NewSave(gen, config.GetKubeConfig())
+
+	payload, _ := k.marshal()
+	err = s.SaveConfig(payload)
+	if err != nil {
+		return fmt.Errorf("Cannot write the kubeconfig: %s", err)
+	}
+
+	return nil
+}
+
+// Save writes the kubeconfig in the given file
+func (k *KubeConfig) SaveWithHistory() error {
+	err := k.validate()
+	if err != nil {
+		return fmt.Errorf("Failed to validate the kubeconfig: %s", err)
+	}
+
+	gen, err := saver.NewGenerator("")
+	if err != nil {
+		return fmt.Errorf("Cannot generate a filename: %s", err)
+	}
+	s := saver.NewSave(gen, config.GetKubeConfig())
+	err = s.BackupHistory()
+	if err != nil {
+		return fmt.Errorf("Cannot backup the kubeconfig: %s", err)
+	}
+
+	payload, _ := k.marshal()
+	err = s.SaveConfig(payload)
+	if err != nil {
+		return fmt.Errorf("Cannot backup the kubeconfig: %s", err)
+	}
+
+	return nil
 }
 
 // WriteTempFile writes the kubeconfig in a temporary file

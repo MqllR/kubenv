@@ -21,13 +21,3 @@ func NewKubeConfig() (*k8s.KubeConfig, error) {
 
 	return kubeconfig, nil
 }
-
-func SaveKubeConfig(kubeconfig *k8s.KubeConfig) error {
-	fh, err := os.OpenFile(config.GetKubeConfig(), os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0600)
-	if err != nil {
-		return fmt.Errorf("Cannot open the kubeconfig: %s", err)
-	}
-	defer fh.Close()
-
-	return kubeconfig.Save(fh)
-}

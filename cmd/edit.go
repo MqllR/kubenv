@@ -7,7 +7,6 @@ import (
 	"github.com/spf13/cobra"
 	"k8s.io/klog"
 
-	"github.com/mqllr/kubenv/cmd/helpers"
 	"github.com/mqllr/kubenv/pkg/k8s"
 )
 
@@ -76,7 +75,7 @@ func editContext(args []string) {
 		klog.Fatalf("Cannot set the current-context: %s", err)
 	}
 
-	err = helpers.SaveKubeConfig(newKubeconfig)
+	err = newKubeconfig.SaveWithHistory()
 	if err != nil {
 		klog.Fatalf("Cannot load the updated kubeconfig: %s", err)
 	}

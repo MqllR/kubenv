@@ -6,7 +6,6 @@ import (
 	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
 
-	"github.com/mqllr/kubenv/cmd/helpers"
 	"github.com/mqllr/kubenv/pkg/config"
 	"github.com/mqllr/kubenv/pkg/k8s"
 	"github.com/mqllr/kubenv/pkg/sync"
@@ -71,7 +70,7 @@ func runSync(opts *sync.SyncOptions) error {
 
 	baseKubeConfig.Append(kubeconfig)
 
-	err = helpers.SaveKubeConfig(baseKubeConfig)
+	err = baseKubeConfig.SaveWithHistory()
 	if err != nil {
 		fmt.Printf("%v Failed to write the kubeconfig file: %s", promptui.IconBad, err)
 	}

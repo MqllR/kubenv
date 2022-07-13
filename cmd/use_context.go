@@ -6,7 +6,6 @@ import (
 	"github.com/spf13/cobra"
 	"k8s.io/klog"
 
-	"github.com/mqllr/kubenv/cmd/helpers"
 	"github.com/mqllr/kubenv/pkg/prompt"
 )
 
@@ -59,7 +58,7 @@ func useContext(opts *useContextOptions) {
 		klog.Fatalf("Cannot set the current context %s: %s", selectedContext, err)
 	}
 
-	err = helpers.SaveKubeConfig(kubeconfig)
+	err = kubeconfig.Save()
 	if err != nil {
 		klog.Fatalf("Cannot write the kubeconfig file: %s", err)
 	}
