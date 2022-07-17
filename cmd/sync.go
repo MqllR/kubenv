@@ -8,6 +8,7 @@ import (
 
 	"github.com/mqllr/kubenv/pkg/config"
 	"github.com/mqllr/kubenv/pkg/k8s"
+	"github.com/mqllr/kubenv/pkg/saver"
 	"github.com/mqllr/kubenv/pkg/sync"
 )
 
@@ -70,7 +71,13 @@ func runSync(opts *sync.SyncOptions) error {
 
 	baseKubeConfig.Append(kubeconfig)
 
-	err = baseKubeConfig.SaveWithHistory()
+	gen, err := saver.NewGenerator("")
+	if err != nil {
+		fmt.Errorf("Cannot generate a filename: %s", err)
+	}
+
+	s := saver.NewHistory(gen, config.GetKubeConfig())
+	err = baseKubeConfig.Save(s)
 	if err != nil {
 		fmt.Printf("%v Failed to write the kubeconfig file: %s", promptui.IconBad, err)
 	}

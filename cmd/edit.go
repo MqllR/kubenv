@@ -7,7 +7,9 @@ import (
 	"github.com/spf13/cobra"
 	"k8s.io/klog"
 
+	"github.com/mqllr/kubenv/pkg/config"
 	"github.com/mqllr/kubenv/pkg/k8s"
+	"github.com/mqllr/kubenv/pkg/saver"
 )
 
 func editCmd() *cobra.Command {
@@ -75,7 +77,13 @@ func editContext(args []string) {
 		klog.Fatalf("Cannot set the current-context: %s", err)
 	}
 
-	err = newKubeconfig.SaveWithHistory()
+	gen, err := saver.NewGenerator("")
+	if err != nil {
+		klog.Fatalf("Cannot generate a filename: %s", err)
+	}
+	s := saver.NewHistory(gen, config.GetKubeConfig())
+
+	err = newKubeconfig.Save(s)
 	if err != nil {
 		klog.Fatalf("Cannot load the updated kubeconfig: %s", err)
 	}

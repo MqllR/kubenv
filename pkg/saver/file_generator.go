@@ -8,6 +8,8 @@ import (
 	"time"
 )
 
+const historyPrefixFile = "config"
+
 type IGenerator interface {
 	GenerateHistoryFilename() string
 }
@@ -32,5 +34,5 @@ func NewGenerator(baseConfigPath string) (*Generator, error) {
 
 func (g *Generator) GenerateHistoryFilename() string {
 	now := time.Now().Unix()
-	return fmt.Sprintf("%s/kubeconfig-%s", g.baseConfigPath, strconv.FormatInt(now, 10))
+	return fmt.Sprintf("%s/%s-%s", g.baseConfigPath, historyPrefixFile, strconv.FormatInt(now, 10))
 }
