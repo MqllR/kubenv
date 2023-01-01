@@ -20,6 +20,7 @@ func withContextCmd() *cobra.Command {
 			withContext(args)
 		},
 	}
+
 	return cmd
 }
 
@@ -31,13 +32,15 @@ func withContext(args []string) {
 	klog.V(5).Infof("List of contexts: %v", contexts)
 
 	p := prompt.NewPrompt("Select the contexts:", contexts)
+
 	selectedContexts, err := p.PromptMultipleSelect()
 	if err != nil {
-		klog.Fatalf("Cannot get the answer from the prompt: %s", err)
+		klog.Fatalf("cannot get the answer from the prompt: %s", err)
 	}
 
 	for _, context := range selectedContexts {
 		color.Green("-> Context %s\n", context)
+
 		err := kubeconfig.ExecCommand(context, args)
 		if err != nil {
 			klog.Errorf("Cmd error: %s", err)

@@ -23,8 +23,6 @@ func TestVersionOutput(t *testing.T) {
 
 	for name, option := range options {
 		t.Run(name, func(t *testing.T) {
-			t.Parallel()
-
 			b := bytes.NewBufferString("")
 
 			cmd := versionCmd()

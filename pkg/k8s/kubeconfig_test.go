@@ -1,13 +1,13 @@
 package k8s_test
 
 import (
-	"bytes"
 	"fmt"
 	"reflect"
 	"strings"
 	"testing"
 
 	"github.com/mqllr/kubenv/pkg/k8s"
+	"github.com/mqllr/kubenv/pkg/saver"
 )
 
 var (
@@ -320,9 +320,7 @@ func TestSaveFile(t *testing.T) {
 			t.Error(err)
 		}
 
-		buf := new(bytes.Buffer)
-
-		err = kubeconfig.Save(buf)
+		err = kubeconfig.Save(saver.NewSaveMock())
 		if err != nil && !test.errExpected {
 			t.Errorf("Got an error %s, but this wasn't expected", err.Error())
 		}

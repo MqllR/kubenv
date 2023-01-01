@@ -1,7 +1,11 @@
 package saver
 
-type GeneratorMock struct{}
+type SaveMock struct{}
 
-func (g *GeneratorMock) GenerateHistoryFilename() string {
-	return "/home/foo/.kube/kubeconfig-1657725814415"
+var _ Saver = &SaveMock{}
+
+func NewSaveMock() *SaveMock { return &SaveMock{} }
+
+func (s *SaveMock) SaveConfig(data []byte) error {
+	return nil
 }

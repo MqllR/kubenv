@@ -1,4 +1,4 @@
-package saver
+package history
 
 import (
 	"fmt"
@@ -11,28 +11,32 @@ import (
 const historyPrefixFile = "config"
 
 type IGenerator interface {
-	GenerateHistoryFilename() string
+	TimestampedFile() string
 }
 
 type Generator struct {
 	baseConfigPath string
 }
 
-func NewGenerator(baseConfigPath string) (*Generator, error) {
+var _ IGenerator = &Generator{}
+
+func NewKubeHistory(baseConfigPath string) (*Generator, error) {
 	generator := &Generator{}
 
 	if baseConfigPath == "" {
 		home, err := os.UserHomeDir()
 		if err != nil {
-			return nil, fmt.Errorf("Cannot get the home dir: %s", err)
+			return nil, fmt.Errorf("cannot get the home dir: %w", err)
 		}
+
 		generator.baseConfigPath = filepath.Join(home, ".kube")
 	}
 
 	return generator, nil
 }
 
-func (g *Generator) GenerateHistoryFilename() string {
+func (g *Generator) TimestampedFile() string {
 	now := time.Now().Unix()
+
 	return fmt.Sprintf("%s/%s-%s", g.baseConfigPath, historyPrefixFile, strconv.FormatInt(now, 10))
 }

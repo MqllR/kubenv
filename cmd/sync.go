@@ -8,7 +8,6 @@ import (
 
 	"github.com/mqllr/kubenv/pkg/config"
 	"github.com/mqllr/kubenv/pkg/k8s"
-	"github.com/mqllr/kubenv/pkg/saver"
 	"github.com/mqllr/kubenv/pkg/sync"
 )
 
@@ -64,23 +63,14 @@ func runSync(opts *sync.SyncOptions) error {
 	}
 
 	svc := sync.NewService(opts)
-	kubeconfig, err := svc.RetrieveKubeConfig()
+	remoteConfig, err := svc.RetrieveKubeConfig()
 	if err != nil {
-		return fmt.Errorf("Cannot retrieve the kubeconfig: %s", err)
+		return fmt.Errorf("cannot retrieve the kubeconfig: %s", err)
 	}
 
-	baseKubeConfig.Append(kubeconfig)
+	baseKubeConfig.Append(remoteConfig)
 
-	gen, err := saver.NewGenerator("")
-	if err != nil {
-		fmt.Errorf("Cannot generate a filename: %s", err)
-	}
-
-	s := saver.NewHistory(gen, config.GetKubeConfig())
-	err = baseKubeConfig.Save(s)
-	if err != nil {
-		fmt.Printf("%v Failed to write the kubeconfig file: %s", promptui.IconBad, err)
-	}
+	backupAndSave(baseKubeConfig)
 
 	return nil
 }

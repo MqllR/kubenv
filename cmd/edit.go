@@ -7,9 +7,7 @@ import (
 	"github.com/spf13/cobra"
 	"k8s.io/klog"
 
-	"github.com/mqllr/kubenv/pkg/config"
 	"github.com/mqllr/kubenv/pkg/k8s"
-	"github.com/mqllr/kubenv/pkg/saver"
 )
 
 func editCmd() *cobra.Command {
@@ -30,7 +28,7 @@ func editContext(args []string) {
 
 	tempfile, err := k.WriteTempFile()
 	if err != nil {
-		klog.Fatalf("Cannot create a temporary file: %s", err)
+		klog.Fatalf("cannot create a temporary file: %s", err)
 	}
 
 	editor := os.Getenv("EDITOR")
@@ -46,45 +44,36 @@ func editContext(args []string) {
 	err = cmd.Run()
 
 	if err != nil {
-		klog.Fatalf("Cannot run the editor cmd: %s", err)
+		klog.Fatalf("cannot run the editor cmd: %s", err)
 	}
 
 	f, err := os.Open(tempfile)
 	if err != nil {
-		klog.Fatalf("Cannot run the editor cmd: %s", err)
+		klog.Fatalf("cannot run the editor cmd: %s", err)
 	}
 
 	k, err = k8s.NewKubeConfigFromReader(f)
 	if err != nil {
-		klog.Fatalf("Cannot load the updated kubeconfig: %s", err)
+		klog.Fatalf("cannot load the updated kubeconfig: %s", err)
 	}
 
-	newKubeconfig := k8s.NewKubeConfig()
+	kubeConfig := k8s.NewKubeConfig()
 
 	for _, context := range kubeconfig.Contexts {
 		if context.Name != kubeconfig.CurrentContext {
 			c, err := kubeconfig.GetKubeConfigByContextName(context.Name)
 			if err != nil {
-				klog.Fatalf("Cannot load the context while rebuilding the global config: %s", err)
+				klog.Fatalf("cannot load the context while rebuilding the global config: %s", err)
 			}
-			newKubeconfig.Append(c)
+			kubeConfig.Append(c)
 		}
 	}
 
-	newKubeconfig.Append(k)
-	err = newKubeconfig.SetCurrentContext(k.GetContextNames()[0])
+	kubeConfig.Append(k)
+	err = kubeConfig.SetCurrentContext(k.GetContextNames()[0])
 	if err != nil {
 		klog.Fatalf("Cannot set the current-context: %s", err)
 	}
 
-	gen, err := saver.NewGenerator("")
-	if err != nil {
-		klog.Fatalf("Cannot generate a filename: %s", err)
-	}
-	s := saver.NewHistory(gen, config.GetKubeConfig())
-
-	err = newKubeconfig.Save(s)
-	if err != nil {
-		klog.Fatalf("Cannot load the updated kubeconfig: %s", err)
-	}
+	backupAndSave(kubeConfig)
 }

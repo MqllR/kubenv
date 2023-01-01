@@ -7,8 +7,9 @@ import (
 	"os"
 	"os/exec"
 
-	"github.com/mqllr/kubenv/pkg/saver"
 	"gopkg.in/yaml.v2"
+
+	"github.com/mqllr/kubenv/pkg/saver"
 )
 
 // KubeConfig represents a kubernetes client configuration
@@ -282,7 +283,6 @@ func (k *KubeConfig) marshal() ([]byte, error) {
 	return yaml.Marshal(&k)
 }
 
-// marshal converts to []byte a KubeConfig
 func (k *KubeConfig) validate() error {
 	for _, context := range k.GetContextNames() {
 		_, err := k.GetClusterByContextName(context)

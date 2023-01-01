@@ -4,7 +4,6 @@ import (
 	goflag "flag"
 	"fmt"
 
-	"github.com/mqllr/kubenv/cmd/helpers"
 	"github.com/mqllr/kubenv/pkg/k8s"
 	"github.com/spf13/cobra"
 	"k8s.io/klog"
@@ -17,9 +16,9 @@ var (
 		Use: "kubenv",
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
 			var err error
-			kubeconfig, err = helpers.NewKubeConfig()
+			kubeconfig, err = newKubeConfig()
 			if err != nil {
-				klog.Fatalf("Cannot load the kubeconfig: %s", err)
+				klog.Fatalf("cannot load the kubeconfig: %s", err)
 			}
 		},
 		Short: "A tool to manage multiple Kube cluster",

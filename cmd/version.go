@@ -12,19 +12,15 @@ const (
 	version = "1.2.2"
 )
 
-type versionOptions struct {
-	output string
-}
+var output string
 
 // versionCmd cobra command for version
 func versionCmd() *cobra.Command {
-	opts := versionOptions{}
-
 	cmd := &cobra.Command{
 		Use:   "version",
 		Short: "Print the CLI version",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			switch opts.output {
+			switch output {
 			case "json":
 				v, _ := json.Marshal(map[string]string{"version": version})
 				fmt.Fprintf(cmd.OutOrStdout(), "%s", string(v))
@@ -39,7 +35,7 @@ func versionCmd() *cobra.Command {
 	}
 
 	f := cmd.Flags()
-	f.StringVarP(&opts.output, "output", "o", "", "Output: json")
+	f.StringVarP(&output, "output", "o", "", "Output: json")
 
 	return cmd
 }

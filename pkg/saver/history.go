@@ -3,58 +3,29 @@ package saver
 import (
 	"fmt"
 	"io"
-	"os"
+
+	"github.com/mqllr/kubenv/pkg/history"
 )
 
 type History struct {
-	generator IGenerator
-	source    string
+	w io.Writer
+	b *history.Back
 }
 
-func NewHistory(gen IGenerator, filename string) *History {
-	return &History{
-		generator: gen,
-		source:    filename,
-	}
+var _ Saver = &History{}
+
+func NewHistorySave(w io.Writer, backup *history.Back) *History {
+	return &History{w, backup}
 }
 
 func (h *History) SaveConfig(data []byte) error {
-	err := h.backupHistory()
-	if err != nil {
-		return fmt.Errorf("Cannot save the history: %s", err)
+	if err := h.b.Backup(); err != nil {
+		return fmt.Errorf("failed to backup: %w", err)
 	}
 
-	fh, err := os.OpenFile(h.source, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0600)
+	_, err := h.w.Write(data)
 	if err != nil {
-		return fmt.Errorf("Cannot open the kubeconfig: %s", err)
-	}
-	defer fh.Close()
-
-	_, err = fh.Write(data)
-	if err != nil {
-		return fmt.Errorf("Cannot write the file: %s", err)
-	}
-
-	return nil
-}
-
-func (h *History) backupHistory() error {
-	src, err := os.Open(h.source)
-	if err != nil {
-		return fmt.Errorf("Cannot open the filename %s: %s", h.source, err)
-	}
-	defer src.Close()
-
-	filename := h.generator.GenerateHistoryFilename()
-	dest, err := os.OpenFile(filename, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0600)
-	if err != nil {
-		return fmt.Errorf("Cannot open the filename %s: %s", filename, err)
-	}
-	defer dest.Close()
-
-	_, err = io.Copy(dest, src)
-	if err != nil {
-		return fmt.Errorf("Cannot copy the file: %s", err)
+		return fmt.Errorf("cannot save config: %w", err)
 	}
 
 	return nil
