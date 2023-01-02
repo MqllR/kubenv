@@ -1,0 +1,7 @@
+linters:
+  # Enable presets.
+  # https://golangci-lint.run/usage/linters
+  presets:
+    - bugs
+    - comment
+    - complexity

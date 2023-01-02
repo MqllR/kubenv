@@ -1,9 +1,11 @@
 package cmd
 
 import (
+	"fmt"
 	"os"
 	"os/exec"
 
+	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
 	"k8s.io/klog"
 
@@ -76,4 +78,6 @@ func editContext(args []string) {
 	}
 
 	backupAndSave(kubeConfig)
+
+	fmt.Fprintf(editCmd().OutOrStdout(), "Context %s edited %v\n", kubeConfig.CurrentContext, promptui.IconGood)
 }

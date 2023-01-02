@@ -12,6 +12,8 @@ type CommandExec struct {
 	cmd []string
 }
 
+var _ Syncer = &CommandExec{}
+
 // NewCommandExec just creates a CommandExec
 func NewCommandExec(cmd []string) *CommandExec {
 	return &CommandExec{

@@ -1,16 +1,20 @@
 package sync_test
 
 import (
-	"strings"
+	"os"
 	"testing"
 
 	"github.com/mqllr/kubenv/pkg/sync"
 )
 
 func TestLocalFile(t *testing.T) {
-	r := strings.NewReader(kubeconfig1)
+	kubeconfig1, err := os.Open("testdata/kubeconfig1.yaml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer kubeconfig1.Close()
 
-	localFile := sync.NewLocalFile(r)
+	localFile := sync.NewLocalFile(kubeconfig1)
 	kubeconfig, err := localFile.GetKubeConfig()
 
 	if err != nil {

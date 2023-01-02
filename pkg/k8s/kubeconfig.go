@@ -12,6 +12,11 @@ import (
 	"github.com/mqllr/kubenv/pkg/saver"
 )
 
+const (
+	APIVersion = "v1"
+	Kind       = "Config"
+)
+
 // KubeConfig represents a kubernetes client configuration
 type KubeConfig struct {
 	APIVersion     string                 `yaml:"apiVersion"`
@@ -26,9 +31,9 @@ type KubeConfig struct {
 // NewKubeConfig creates a new struct KubeConfig
 func NewKubeConfig() *KubeConfig {
 	return &KubeConfig{
-		APIVersion:  "v1", // Initiale values
+		APIVersion:  APIVersion,
 		Preferences: map[string]interface{}{},
-		Kind:        "Config",
+		Kind:        Kind,
 	}
 }
 
@@ -108,6 +113,7 @@ func (k *KubeConfig) GetContextNames() []string {
 // ToString converts a KubeConfig in a string
 func (k *KubeConfig) ToString() (string, error) {
 	config, err := k.marshal()
+
 	return string(config), err
 }
 
@@ -132,6 +138,7 @@ func (k *KubeConfig) SetCurrentContext(context string) error {
 	}
 
 	k.CurrentContext = context
+
 	return nil
 }
 
@@ -217,18 +224,18 @@ func (kubeConfig *KubeConfig) GetKubeConfigByContextName(context string) (*KubeC
 func (k *KubeConfig) ExecCommand(context string, cmd []string) error {
 	err := k.SetCurrentContext(context)
 	if err != nil {
-		return fmt.Errorf("Error when settings the context: %s", err)
+		return fmt.Errorf("error when settings the context: %w", err)
 	}
 
 	tempKubeConfig, err := k.WriteTempFile()
 	if err != nil {
-		return fmt.Errorf("Error when creating the temporary kubeconfig file: %s", err)
+		return fmt.Errorf("error when creating the temporary kubeconfig file: %w", err)
 	}
 	defer os.Remove(tempKubeConfig)
 
 	exe, err := exec.LookPath(cmd[0])
 	if err != nil {
-		return fmt.Errorf("Binary not found: %s", err)
+		return fmt.Errorf("binary not found: %w", err)
 	}
 
 	envs := os.Environ()
@@ -287,12 +294,14 @@ func (k *KubeConfig) validate() error {
 	for _, context := range k.GetContextNames() {
 		_, err := k.GetClusterByContextName(context)
 		if err != nil {
-			return fmt.Errorf("Cannot retrieve the cluster using the context %s: %s", context, err)
+			return fmt.Errorf("cannot retrieve the cluster using the context %s: %w", context, err)
 		}
+
 		_, err = k.GetUserByContextName(context)
 		if err != nil {
-			return fmt.Errorf("Cannot retrieve the user using the context %s: %s", context, err)
+			return fmt.Errorf("cannot retrieve the user using the context %s: %w", context, err)
 		}
 	}
+
 	return nil
 }

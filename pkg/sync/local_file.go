@@ -11,6 +11,8 @@ type LocalFile struct {
 	reader io.Reader
 }
 
+var _ Syncer = &LocalFile{}
+
 // NewLocalFile creates a LocalFile
 func NewLocalFile(reader io.Reader) *LocalFile {
 	return &LocalFile{

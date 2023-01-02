@@ -2,6 +2,8 @@ package cmd
 
 import (
 	"fmt"
+	"os"
+	"strings"
 
 	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
@@ -11,15 +13,20 @@ import (
 	"github.com/mqllr/kubenv/pkg/sync"
 )
 
+type SyncOptions struct {
+	AppendTo bool
+	Mode     string
+	Path     string
+	Command  string
+	Glob     string
+}
+
 func syncCommand() *cobra.Command {
-	opts := sync.SyncOptions{}
+	opts := SyncOptions{}
 
 	cmd := &cobra.Command{
 		Use:   "sync",
 		Short: "Synchronize the kubernetes config files",
-		PreRunE: func(cmd *cobra.Command, args []string) error {
-			return validateFlags(&opts)
-		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runSync(&opts)
 		},
@@ -35,24 +42,7 @@ func syncCommand() *cobra.Command {
 	return cmd
 }
 
-func validateFlags(opts *sync.SyncOptions) error {
-	existInSyncMode := func(mode string) bool {
-		for _, m := range config.SyncMode {
-			if mode == m {
-				return true
-			}
-		}
-		return false
-	}
-
-	if !existInSyncMode(opts.Mode) {
-		return fmt.Errorf("Mode %s not supported", opts.Mode)
-	}
-
-	return nil
-}
-
-func runSync(opts *sync.SyncOptions) error {
+func runSync(opts *SyncOptions) error {
 	fmt.Printf("%v Start to synchronize the kubeconfig file into %s ...\n", promptui.IconSelect, config.GetKubeConfig())
 
 	baseKubeConfig := k8s.NewKubeConfig()
@@ -62,8 +52,26 @@ func runSync(opts *sync.SyncOptions) error {
 		baseKubeConfig = kubeconfig
 	}
 
-	svc := sync.NewService(opts)
-	remoteConfig, err := svc.RetrieveKubeConfig()
+	var s sync.Syncer
+
+	switch opts.Mode {
+	case "local":
+		f, err := os.Open(opts.Path)
+		if err != nil {
+			return nil
+		}
+		s = sync.NewLocalFile(f)
+	case "exec":
+		cmd := strings.Split(opts.Command, " ")
+		s = sync.NewCommandExec(cmd)
+	case "glob":
+		fs := os.DirFS("/")
+		s = sync.NewGlob(fs, opts.Glob)
+	default:
+		return fmt.Errorf("Mode %s not supported", opts.Mode)
+	}
+
+	remoteConfig, err := s.GetKubeConfig()
 	if err != nil {
 		return fmt.Errorf("cannot retrieve the kubeconfig: %s", err)
 	}

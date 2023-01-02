@@ -12,6 +12,8 @@ type Glob struct {
 	pattern    string
 }
 
+var _ Syncer = &Glob{}
+
 func NewGlob(fileSystem fs.FS, pattern string) *Glob {
 	return &Glob{
 		fileSystem,

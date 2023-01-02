@@ -1,6 +1,7 @@
 package sync_test
 
 import (
+	"io/ioutil"
 	"testing"
 	"testing/fstest"
 
@@ -8,6 +9,15 @@ import (
 )
 
 func TestGlob(t *testing.T) {
+	kubeconfig1, err := ioutil.ReadFile("testdata/kubeconfig1.yaml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	kubeconfig2, err := ioutil.ReadFile("testdata/kubeconfig2.yaml")
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	fs := fstest.MapFS{
 		"folder/foo": {Data: []byte(kubeconfig1)},
 		"folder/bar": {Data: []byte(kubeconfig2)},

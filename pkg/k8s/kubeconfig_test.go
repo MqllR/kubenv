@@ -2,8 +2,8 @@ package k8s_test
 
 import (
 	"fmt"
+	"os"
 	"reflect"
-	"strings"
 	"testing"
 
 	"github.com/mqllr/kubenv/pkg/k8s"
@@ -12,129 +12,15 @@ import (
 
 var (
 	testingConfig1 = `
-apiVersion: v1
-clusters:
-- cluster:
-    certificate-authority-data: FAKEVALUE
-    server: https://fakeurl.com
-  name: fakecluster
-contexts:
-- context:
-    cluster: fakecluster
-    namespace: fakens
-    user: fakeuser
-  name: fakecontext
-kind: Config
-preferences: {}
-users:
-- name: fakeuser
-  user:
-    exec:
-      apiVersion: client.authentication.k8s.io/v1alpha1
-      args:
-      - token
-      - -i
-      - fakecluster
-      command: aws-iam-authenticator
 `
 
 	testingConfig2 = `
-apiVersion: v1
-clusters:
-- cluster:
-    certificate-authority-data: FAKEVALUE2
-    server: https://fakeurl2.com
-  name: fakecluster2
-contexts:
-- context:
-    cluster: fakecluster2
-    namespace: fakens2
-    user: fakeuser2
-  name: fakecontext2
-kind: Config
-preferences: {}
-users:
-- name: fakeuser2
-  user:
-    exec:
-      apiVersion: client.authentication.k8s.io/v1alpha1
-      args:
-      - token
-      - -i
-      - fakecluster2
-      command: aws-iam-authenticator
 `
 
 	testingBadConfig1 = `
-apiVersion: v1
-clusters:
-- cluster:
-    certificate-authority-data: FAKEVALUE2
-    server: https://fakeurl2.com
-  name: fake1
-contexts:
-- context:
-    cluster: fakecluster1
-    namespace: fakens1
-    user: fakeuser1
-  name: fakecontext1
-kind: Config
-preferences: {}
-users:
-- name: fake1
-  user:
-    exec:
-      apiVersion: client.authentication.k8s.io/v1alpha1
-      args:
-      - token
-      - -i
-      - fakecluster2
-      command: aws-iam-authenticator
 `
 
 	testingMergedConfig = `
-apiVersion: v1
-clusters:
-- cluster:
-    certificate-authority-data: FAKEVALUE2
-    server: https://fakeurl2.com
-  name: fakecluster2
-- cluster:
-    certificate-authority-data: FAKEVALUE
-    server: https://fakeurl.com
-  name: fakecluster
-contexts:
-- context:
-    cluster: fakecluster2
-    namespace: fakens2
-    user: fakeuser2
-  name: fakecontext2
-- context:
-    cluster: fakecluster
-    namespace: fakens
-    user: fakeuser
-  name: fakecontext
-kind: Config
-preferences: {}
-users:
-- name: fakeuser2
-  user:
-    exec:
-      apiVersion: client.authentication.k8s.io/v1alpha1
-      args:
-      - token
-      - -i
-      - fakecluster2
-      command: aws-iam-authenticator
-- name: fakeuser
-  user:
-    exec:
-      apiVersion: client.authentication.k8s.io/v1alpha1
-      args:
-      - token
-      - -i
-      - fakecluster
-      command: aws-iam-authenticator
 `
 
 	testingConfigStruct = &k8s.KubeConfig{
@@ -188,7 +74,7 @@ func TestNewKubeConfig(t *testing.T) {
 }
 
 func TestNewKubeConfigFromReader(t *testing.T) {
-	kubeconfig, err := loadKubeConfig(testingConfig1)
+	kubeconfig, err := loadKubeConfig(t, "kubeconfig1")
 
 	if err != nil {
 		t.Errorf("Unexpeted err: %s", err)
@@ -218,7 +104,7 @@ var (
 )
 
 func TestGetContextByContextName(t *testing.T) {
-	kubeconfig, err := loadKubeConfig(testingConfig1)
+	kubeconfig, err := loadKubeConfig(t, "kubeconfig1")
 	if err != nil {
 		t.Error(err)
 	}
@@ -240,7 +126,7 @@ func TestGetContextByContextName(t *testing.T) {
 }
 
 func TestGetUserByContextName(t *testing.T) {
-	kubeconfig, err := loadKubeConfig(testingConfig1)
+	kubeconfig, err := loadKubeConfig(t, "kubeconfig1")
 	if err != nil {
 		t.Error(err)
 	}
@@ -262,7 +148,7 @@ func TestGetUserByContextName(t *testing.T) {
 }
 
 func TestGetClusterByContextName(t *testing.T) {
-	kubeconfig, err := loadKubeConfig(testingConfig1)
+	kubeconfig, err := loadKubeConfig(t, "kubeconfig1")
 	if err != nil {
 		t.Error(err)
 	}
@@ -284,7 +170,7 @@ func TestGetClusterByContextName(t *testing.T) {
 }
 
 func TestGetKubeConfigByContextName(t *testing.T) {
-	kubeconfig, err := loadKubeConfig(testingMergedConfig)
+	kubeconfig, err := loadKubeConfig(t, "kubeconfig_merge")
 	if err != nil {
 		t.Error(err)
 	}
@@ -310,12 +196,12 @@ func TestSaveFile(t *testing.T) {
 		kubeconfig  string
 		errExpected bool
 	}{
-		{testingConfig1, false},
-		{testingBadConfig1, true},
+		{"kubeconfig1", false},
+		{"kubeconfig_bad", true},
 	}
 
 	for _, test := range testSuites {
-		kubeconfig, err := loadKubeConfig(test.kubeconfig)
+		kubeconfig, err := loadKubeConfig(t, test.kubeconfig)
 		if err != nil {
 			t.Error(err)
 		}
@@ -328,17 +214,17 @@ func TestSaveFile(t *testing.T) {
 }
 
 func TestAppend(t *testing.T) {
-	kubeconfig1, err := loadKubeConfig(testingConfig1)
+	kubeconfig1, err := loadKubeConfig(t, "kubeconfig1")
 	if err != nil {
 		t.Error(err)
 	}
 
-	kubeconfig2, err := loadKubeConfig(testingConfig2)
+	kubeconfig2, err := loadKubeConfig(t, "kubeconfig2")
 	if err != nil {
 		t.Error(err)
 	}
 
-	kubeconfigMerged, err := loadKubeConfig(testingMergedConfig)
+	kubeconfigMerged, err := loadKubeConfig(t, "kubeconfig_merge")
 	if err != nil {
 		t.Error(err)
 	}
@@ -349,9 +235,13 @@ func TestAppend(t *testing.T) {
 	}
 }
 
-func loadKubeConfig(kubeConfig string) (*k8s.KubeConfig, error) {
-	r := strings.NewReader(kubeConfig)
-	kubeconfig, err := k8s.NewKubeConfigFromReader(r)
+func loadKubeConfig(t *testing.T, kubeConfig string) (*k8s.KubeConfig, error) {
+	fh, err := os.Open(fmt.Sprintf("testdata/%s.yaml", kubeConfig))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	kubeconfig, err := k8s.NewKubeConfigFromReader(fh)
 	if err != nil {
 		return nil, fmt.Errorf("Error when trying to unmarsh the test config: %s", err)
 	}
