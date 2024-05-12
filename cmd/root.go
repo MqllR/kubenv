@@ -52,6 +52,7 @@ func init() {
 	rootCmd.AddCommand(syncCommand())
 	rootCmd.AddCommand(useContextCmd())
 	rootCmd.AddCommand(withContextCmd())
+	rootCmd.AddCommand(deleteCmd())
 
 	// show cmd
 	s := showCmd()
