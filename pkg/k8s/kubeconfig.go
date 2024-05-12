@@ -3,7 +3,6 @@ package k8s
 import (
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"os/exec"
 
@@ -32,7 +31,7 @@ func NewKubeConfig() *KubeConfig {
 
 // NewKubeConfigFromReader creates a new struct KubeConfig from an io.Reader
 func NewKubeConfigFromReader(r io.Reader) (*KubeConfig, error) {
-	content, err := ioutil.ReadAll(r)
+	content, err := io.ReadAll(r)
 	if err != nil {
 		return nil, fmt.Errorf("Error when reading kubeconfig reader: %s", err)
 	}
