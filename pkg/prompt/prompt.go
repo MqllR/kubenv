@@ -28,7 +28,7 @@ func (p *Prompt) PromptMultipleSelect() ([]string, error) {
 
 	err := survey.AskOne(prompt, &result)
 	if err != nil {
-		return nil, fmt.Errorf("Prompt error: %s", err)
+		return nil, fmt.Errorf("prompt error: %s", err)
 	}
 
 	return result, nil
@@ -44,7 +44,7 @@ func (p *Prompt) PromptSelect() (string, error) {
 
 	err := survey.AskOne(prompt, &result)
 	if err != nil {
-		return "", fmt.Errorf("Prompt error: %s", err)
+		return "", fmt.Errorf("prompt error: %s", err)
 	}
 
 	return result, nil

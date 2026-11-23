@@ -27,11 +27,11 @@ func versionCmd() *cobra.Command {
 			switch opts.output {
 			case "json":
 				v, _ := json.Marshal(map[string]string{"version": version})
-				fmt.Fprintf(cmd.OutOrStdout(), "%s", string(v))
+				fmt.Fprintf(cmd.OutOrStdout(), "%s\n", string(v))
 			case "":
 				fmt.Fprintf(cmd.OutOrStdout(), "%v kubenv v%s\n", promptui.IconGood, version)
 			default:
-				fmt.Fprintf(cmd.OutOrStdout(), "Unknown output")
+				return fmt.Errorf("unknown output %q", opts.output)
 			}
 			return nil
 		},

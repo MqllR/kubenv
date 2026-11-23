@@ -47,7 +47,7 @@ func validateFlags(opts *sync.SyncOptions) error {
 	}
 
 	if !existInSyncMode(opts.Mode) {
-		return fmt.Errorf("Mode %s not supported", opts.Mode)
+		return fmt.Errorf("mode %s not supported", opts.Mode)
 	}
 
 	return nil
@@ -66,7 +66,7 @@ func runSync(opts *sync.SyncOptions) error {
 	svc := sync.NewService(opts)
 	kubeconfig, err := svc.RetrieveKubeConfig()
 	if err != nil {
-		return fmt.Errorf("Cannot retrieve the kubeconfig: %s", err)
+		return fmt.Errorf("cannot retrieve the kubeconfig: %s", err)
 	}
 
 	baseKubeConfig.Append(kubeconfig)

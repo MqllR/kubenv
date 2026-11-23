@@ -33,13 +33,13 @@ func NewKubeConfig() *KubeConfig {
 func NewKubeConfigFromReader(r io.Reader) (*KubeConfig, error) {
 	content, err := io.ReadAll(r)
 	if err != nil {
-		return nil, fmt.Errorf("Error when reading kubeconfig reader: %s", err)
+		return nil, fmt.Errorf("error when reading kubeconfig reader: %s", err)
 	}
 
 	k := NewKubeConfig()
 
 	if err = k.unmarshal(content); err != nil {
-		return nil, fmt.Errorf("Can't unmarshal the kubeconfig file: %s", err)
+		return nil, fmt.Errorf("can't unmarshal the kubeconfig file: %s", err)
 	}
 
 	return k, nil
@@ -49,7 +49,7 @@ func NewKubeConfigFromReader(r io.Reader) (*KubeConfig, error) {
 func (k *KubeConfig) Save(w io.Writer) error {
 	err := k.validate()
 	if err != nil {
-		return fmt.Errorf("Failed to validate the kubeconfig: %s", err)
+		return fmt.Errorf("failed to validate the kubeconfig: %s", err)
 	}
 
 	return yaml.NewEncoder(w).Encode(k)
@@ -60,20 +60,25 @@ func (k *KubeConfig) Save(w io.Writer) error {
 func (k *KubeConfig) WriteTempFile() (string, error) {
 	temp, err := os.CreateTemp("/tmp", "kubeconfig-*")
 	if err != nil {
-		return "", fmt.Errorf("Cannot create a temporary file %s", err)
+		return "", fmt.Errorf("cannot create a temporary file %s", err)
 	}
 
 	tempKubeConfig := temp.Name()
-	defer temp.Close()
 
 	data, err := k.marshal()
 	if err != nil {
-		return "", fmt.Errorf("Unable to marshal kubeconfig: %s", err)
+		_ = temp.Close()
+		return "", fmt.Errorf("unable to marshal kubeconfig: %s", err)
 	}
 
 	_, err = temp.Write(data)
 	if err != nil {
-		return "", fmt.Errorf("Error when writting the temporary kubeconfig: %s", err)
+		_ = temp.Close()
+		return "", fmt.Errorf("error when writing the temporary kubeconfig: %s", err)
+	}
+
+	if err = temp.Close(); err != nil {
+		return "", fmt.Errorf("error when closing the temporary kubeconfig: %s", err)
 	}
 
 	return tempKubeConfig, nil
@@ -119,7 +124,7 @@ func (k *KubeConfig) IsContextExist(context string) bool {
 // SetCurrentContext just set the given context to CurrentContext
 func (k *KubeConfig) SetCurrentContext(context string) error {
 	if !k.IsContextExist(context) {
-		return fmt.Errorf("Context %s doesn't exist in kubeconfig file", context)
+		return fmt.Errorf("context %s doesn't exist in kubeconfig file", context)
 	}
 
 	k.CurrentContext = context
@@ -134,7 +139,7 @@ func (k *KubeConfig) GetContextByContextName(context string) (*Context, error) {
 		}
 	}
 
-	return nil, fmt.Errorf("Context %s not found in the context", context)
+	return nil, fmt.Errorf("context %s not found in the context", context)
 }
 
 // GetClusterByContextName returns a Cluster from the context name
@@ -150,7 +155,7 @@ func (k *KubeConfig) GetClusterByContextName(context string) (*Cluster, error) {
 		}
 	}
 
-	return nil, fmt.Errorf("Cluster not found not found for the context %s", context)
+	return nil, fmt.Errorf("cluster not found not found for the context %s", context)
 }
 
 // GetUserByContextName returns a Users from the context name
@@ -166,7 +171,7 @@ func (k *KubeConfig) GetUserByContextName(context string) (*User, error) {
 		}
 	}
 
-	return nil, fmt.Errorf("User not found for the context %s", context)
+	return nil, fmt.Errorf("user not found for the context %s", context)
 }
 
 // GetKubeConfigByContextName returns a KubeConfig
@@ -208,18 +213,18 @@ func (kubeConfig *KubeConfig) GetKubeConfigByContextName(context string) (*KubeC
 func (k *KubeConfig) ExecCommand(context string, cmd []string) error {
 	err := k.SetCurrentContext(context)
 	if err != nil {
-		return fmt.Errorf("Error when settings the context: %s", err)
+		return fmt.Errorf("error when settings the context: %s", err)
 	}
 
 	tempKubeConfig, err := k.WriteTempFile()
 	if err != nil {
-		return fmt.Errorf("Error when creating the temporary kubeconfig file: %s", err)
+		return fmt.Errorf("error when creating the temporary kubeconfig file: %s", err)
 	}
 	defer os.Remove(tempKubeConfig)
 
 	exe, err := exec.LookPath(cmd[0])
 	if err != nil {
-		return fmt.Errorf("Binary not found: %s", err)
+		return fmt.Errorf("binary not found: %s", err)
 	}
 
 	envs := os.Environ()
@@ -279,11 +284,11 @@ func (k *KubeConfig) validate() error {
 	for _, context := range k.GetContextNames() {
 		_, err := k.GetClusterByContextName(context)
 		if err != nil {
-			return fmt.Errorf("Cannot retrieve the cluster using the context %s: %s", context, err)
+			return fmt.Errorf("cannot retrieve the cluster using the context %s: %s", context, err)
 		}
 		_, err = k.GetUserByContextName(context)
 		if err != nil {
-			return fmt.Errorf("Cannot retrieve the user using the context %s: %s", context, err)
+			return fmt.Errorf("cannot retrieve the user using the context %s: %s", context, err)
 		}
 	}
 	return nil
