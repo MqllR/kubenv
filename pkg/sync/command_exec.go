@@ -26,14 +26,14 @@ func (cmd *CommandExec) GetKubeConfig() (*k8s.KubeConfig, error) {
 
 	output, err := command.CombinedOutput()
 	if err != nil {
-		return nil, fmt.Errorf("Error on sync command: %s", err)
+		return nil, fmt.Errorf("error on sync command: %s", err)
 	}
 
 	r := strings.NewReader(string(output))
 
 	kubeconfig, err := k8s.NewKubeConfigFromReader(r)
 	if err != nil {
-		return nil, fmt.Errorf("Bad kubeconfig file: %s", err)
+		return nil, fmt.Errorf("bad kubeconfig file: %s", err)
 	}
 
 	return kubeconfig, nil

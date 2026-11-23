@@ -30,11 +30,11 @@ var (
 func Execute() error {
 	err := goflag.Set("logtostderr", "true")
 	if err != nil {
-		return fmt.Errorf("Error when setting the value to logtostderr %s", err)
+		return fmt.Errorf("error when setting the value to logtostderr %s", err)
 	}
 	err = goflag.CommandLine.Parse([]string{})
 	if err != nil {
-		return fmt.Errorf("Error when parsing params %s", err)
+		return fmt.Errorf("error when parsing params %s", err)
 	}
 
 	return rootCmd.Execute()

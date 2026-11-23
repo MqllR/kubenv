@@ -13,12 +13,13 @@ const releaseVersionRe = `\d+(\.\d+){2}`
 
 func TestVersionOutput(t *testing.T) {
 	options := map[string]struct {
-		arg   string
-		regex string
+		arg     string
+		regex   string
+		wantErr bool
 	}{
-		"empty":         {"", fmt.Sprintf(`^.* kubenv v%s\n`, releaseVersionRe)},
-		"json":          {"json", fmt.Sprintf(`\{"version":"%s"\}`, releaseVersionRe)},
-		"non supported": {"foo", `Unknown output`},
+		"empty":         {"", fmt.Sprintf(`^.* kubenv v%s\n`, releaseVersionRe), false},
+		"json":          {"json", fmt.Sprintf(`^\{"version":"%s"\}\n$`, releaseVersionRe), false},
+		"non supported": {"foo", ``, true},
 	}
 
 	for name, option := range options {
@@ -32,6 +33,12 @@ func TestVersionOutput(t *testing.T) {
 			cmd.SetArgs([]string{"-o", option.arg})
 
 			err := cmd.Execute()
+			if option.wantErr {
+				if err == nil || !strings.Contains(err.Error(), "unknown output") {
+					t.Errorf("Expected unknown output error for arg %s, got: %v", option.arg, err)
+				}
+				return
+			}
 			if err != nil {
 				t.Errorf("Cmd executing failed with arg %s, err: %s", option.arg, err)
 			}
@@ -43,7 +50,7 @@ func TestVersionOutput(t *testing.T) {
 			}
 
 			if !match {
-				t.Errorf("Regex doesn't match for arg %s, output: %s", option.arg, option)
+				t.Errorf("Regex doesn't match for arg %s, output: %s", option.arg, output)
 			}
 		})
 	}
